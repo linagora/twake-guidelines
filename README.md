@@ -1,49 +1,78 @@
 # Twake Guidelines
 
-Linagora Twake coding guidelines, packaged as a [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) plugin. Install once, and your AI assistant automatically follows Twake conventions across every repo.
+Linagora Twake / Cozy coding guidelines, packaged for AI coding agents.
+Install once per project and your agent automatically follows Twake conventions.
+
+Works with:
+
+- [**Claude Code**](https://docs.claude.com/en/docs/claude-code/overview) — via the native plugin system, with per-skill auto-triggering.
+- [**OpenCode**](https://opencode.ai) — via the standard `AGENTS.md` / `opencode.json` mechanism.
+
+Other agents that honor `AGENTS.md` (Codex CLI and similar) can also point at the `AGENTS.md` file at the root of this repo.
 
 ## Install
 
-### Prerequisites
-
-- [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) installed (`npm install -g @anthropic-ai/claude-code` or the installer for your platform).
-
-### 1. Add the marketplace
+### Claude Code
 
 Inside any Twake / Linagora project, from the Claude Code prompt:
 
 ```
 /plugin marketplace add linagora/twake-guidelines
-```
-
-This registers this GitHub repository as a Claude Code marketplace.
-
-### 2. Install the plugin
-
-```
 /plugin install twake-guidelines@twake-guidelines
-```
-
-(The `@twake-guidelines` suffix is the marketplace name — same as the plugin name here.)
-
-### 3. Verify
-
-```
 /plugin list
 ```
 
-You should see `twake-guidelines` in the list. The skills under `skills/` are now auto-discoverable. Claude will trigger them automatically based on what you are working on — a React file triggers `react-conventions`, a Git commit triggers `git-conventions`, and so on. No manual activation needed.
+Claude will auto-trigger the relevant skill based on what you are working on (a React file triggers `react-conventions`, a commit triggers `git-conventions`, and so on). No manual activation needed.
 
-### Update
+**Update / uninstall:**
 
 ```
 /plugin update twake-guidelines@twake-guidelines
-```
-
-### Uninstall
-
-```
 /plugin uninstall twake-guidelines@twake-guidelines
+```
+
+### OpenCode
+
+Add an `opencode.json` to your project root:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/AGENTS.md"
+  ]
+}
+```
+
+OpenCode will fetch the aggregated rules file on every session and apply it to all requests.
+
+**Prefer selective loading?** Replace the one URL with the specific skill files you want:
+
+```json
+{
+  "instructions": [
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/react-conventions/SKILL.md",
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/frontend-testing/SKILL.md",
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/git-conventions/SKILL.md"
+  ]
+}
+```
+
+**Global install** (applies to every OpenCode session, not just this project): copy the aggregate file once:
+
+```bash
+mkdir -p ~/.config/opencode
+curl -fsSL https://raw.githubusercontent.com/linagora/twake-guidelines/main/AGENTS.md \
+  > ~/.config/opencode/AGENTS.md
+```
+
+### Other agents
+
+Any agent that reads `AGENTS.md` at the repo root can pick up the aggregated rules. Either commit a copy to your project (`curl ... > AGENTS.md`) or use a git submodule:
+
+```bash
+git submodule add https://github.com/linagora/twake-guidelines.git .twake-guidelines
+ln -s .twake-guidelines/AGENTS.md AGENTS.md
 ```
 
 ## What's included
@@ -62,32 +91,32 @@ You should see `twake-guidelines` in the list. The skills under `skills/` are no
 - `cozy-client-patterns` — query conventions, doctype naming
 - `java-conventions` — Spring / Quarkus patterns
 - `go-conventions` — project layout, error handling
-- `ci-deployment` — Travis/GitHub Actions, feature flags
+- `ci-deployment` — Travis / GitHub Actions, feature flags
 
 ## Contributing
 
-To add a new skill:
+Each skill lives in `skills/<name>/SKILL.md` with YAML frontmatter (`name`, `description`). The `description` field decides when Claude Code auto-triggers the skill — be specific about the trigger context.
 
-1. Create `skills/<name>/SKILL.md` with YAML frontmatter (`name`, `description`).
-2. The `description` field decides when Claude auto-triggers the skill — be specific about the trigger context.
-3. Open a PR.
+**When editing a skill, update `AGENTS.md` too.** The `AGENTS.md` file at the repo root is the aggregated view used by OpenCode and other tools that load a single rules file; it must stay in sync with the per-skill files. (A generator script is on the roadmap.)
 
 ## Layout
 
 ```
 twake-guidelines/
 ├── .claude-plugin/
-│   ├── plugin.json         # plugin metadata
-│   └── marketplace.json    # marketplace manifest (one plugin)
-├── skills/
+│   ├── plugin.json             # Claude Code plugin manifest
+│   └── marketplace.json        # Claude Code marketplace manifest
+├── skills/                     # Source of truth — per-skill files
 │   ├── react-conventions/SKILL.md
 │   ├── javascript-conventions/SKILL.md
 │   ├── javascript-naming/SKILL.md
 │   ├── frontend-testing/SKILL.md
 │   └── git-conventions/SKILL.md
-└── README.md
+├── AGENTS.md                   # Aggregated rules for OpenCode / other AGENTS.md consumers
+├── README.md
+└── LICENSE
 ```
 
 ## License
 
-AGPL-3.0
+MIT — see [LICENSE](./LICENSE).
