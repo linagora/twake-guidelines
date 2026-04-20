@@ -1,0 +1,33 @@
+name: AGENTS.md sync check
+
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - 'AGENTS.md'
+      - 'scripts/gen-agents.sh'
+      - '.github/workflows/agents-sync.yml'
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    name: Verify AGENTS.md is regenerated
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regenerate AGENTS.md
+        run: ./scripts/gen-agents.sh
+
+      - name: Check AGENTS.md matches skills/
+        run: |
+          if ! git diff --quiet AGENTS.md; then
+            echo "::error::AGENTS.md is out of sync with skills/*/SKILL.md."
+            echo "::error::Run ./scripts/gen-agents.sh locally and commit the result."
+            echo ""
+            echo "--- diff ---"
+            git --no-pager diff AGENTS.md
+            exit 1
+          fi
+          echo "✓ AGENTS.md is up to date"
