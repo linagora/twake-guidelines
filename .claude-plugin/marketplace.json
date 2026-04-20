@@ -1,0 +1,14 @@
+{
+  "name": "twake-guidelines",
+  "owner": {
+    "name": "Linagora",
+    "url": "https://github.com/linagora"
+  },
+  "plugins": [
+    {
+      "name": "twake-guidelines",
+      "source": "./",
+      "description": "Twake coding guidelines — React, JavaScript, Cozy Client, Java, Go, Git conventions"
+    }
+  ]
+}
