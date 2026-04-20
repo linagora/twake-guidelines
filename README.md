@@ -97,7 +97,15 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 
 Each skill lives in `skills/<name>/SKILL.md` with YAML frontmatter (`name`, `description`). The `description` field decides when Claude Code auto-triggers the skill — be specific about the trigger context.
 
-**When editing a skill, update `AGENTS.md` too.** The `AGENTS.md` file at the repo root is the aggregated view used by OpenCode and other tools that load a single rules file; it must stay in sync with the per-skill files. (A generator script is on the roadmap.)
+**After editing any skill, regenerate `AGENTS.md`:**
+
+```bash
+./scripts/gen-agents.sh
+```
+
+The script concatenates every `skills/*/SKILL.md` into `AGENTS.md`, stripping YAML frontmatter and demoting headings by one level. It has no dependencies (pure Bash + `awk`). Commit the regenerated `AGENTS.md` alongside the skill change.
+
+Do not hand-edit `AGENTS.md` — changes there will be overwritten on the next regeneration.
 
 ## Layout
 
@@ -112,7 +120,9 @@ twake-guidelines/
 │   ├── javascript-naming/SKILL.md
 │   ├── frontend-testing/SKILL.md
 │   └── git-conventions/SKILL.md
-├── AGENTS.md                   # Aggregated rules for OpenCode / other AGENTS.md consumers
+├── AGENTS.md                   # Generated aggregate for OpenCode / other AGENTS.md consumers
+├── scripts/
+│   └── gen-agents.sh           # Regenerates AGENTS.md from skills/
 ├── README.md
 └── LICENSE
 ```
