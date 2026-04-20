@@ -84,7 +84,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `javascript-naming` | JS / TS | Function prefixes, cozy-client query `as`, import order |
 | `frontend-testing` | Frontend tests | testing-library, data-testid, queryBy, colocated specs, no snapshots |
 | `frontend-lib-workflow` | React apps consuming cozy-* / twake-* libs | No hand-edits to `node_modules`, yarn link / rlink via cozy-libs monorepo |
-| `git-conventions` | All stacks | Conventional Commits, per-dep-upgrade commits, PR checklist |
+| `git-conventions` | All stacks | Conventional Commits, atomic commits, structured PR workflow with Summary-only bodies |
 
 ### Planned
 
