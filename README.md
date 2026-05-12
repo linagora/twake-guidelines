@@ -84,12 +84,12 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `javascript-naming` | JS / TS | Function prefixes, cozy-client query `as`, import order |
 | `frontend-testing` | Frontend tests | testing-library, data-testid, queryBy, colocated specs, no snapshots |
 | `frontend-lib-workflow` | React apps consuming cozy-* / twake-* libs | No hand-edits to `node_modules`, yarn link / rlink via cozy-libs monorepo |
+| `cozy-client` | Apps querying a Cozy stack | No direct collection access, Q() + useQuery/client.query, shared queries module, alias naming, mandatory fetchPolicy, sortBy/indexFields invariants |
 | `git-conventions` | All stacks | Conventional Commits, atomic commits, structured PR workflow with Summary-only bodies |
 
 ### Planned
 
 - `frontend-dependencies` — library dependency rules (peerDependencies, no Material-UI)
-- `cozy-client-patterns` — query conventions, doctype naming
 - `java-conventions` — Spring / Quarkus patterns
 - `go-conventions` — project layout, error handling
 - `ci-deployment` — Travis / GitHub Actions, feature flags
@@ -120,6 +120,8 @@ twake-guidelines/
 │   ├── javascript-conventions/SKILL.md
 │   ├── javascript-naming/SKILL.md
 │   ├── frontend-testing/SKILL.md
+│   ├── frontend-lib-workflow/SKILL.md
+│   ├── cozy-client/SKILL.md
 │   └── git-conventions/SKILL.md
 ├── AGENTS.md                   # Generated aggregate for OpenCode / other AGENTS.md consumers
 ├── scripts/
