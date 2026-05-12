@@ -28,19 +28,23 @@ Do **not** mix: a function called `getUser` that does a network call is misleadi
 
 ## cozy-client queries
 
-When building a `Q()` query, set a descriptive `as` (alias) for caching and debugging.
+When building a `Q()` query, set a descriptive `as` (alias) for caching and debugging. The full naming convention lives in the `cozy-client` skill; the canonical source is the [cozy-guidelines query naming rules](https://github.com/cozy/cozy-guidelines#naming-of-queries). Quick form:
 
-- **Default `as` = the doctype name.** If you query `io.cozy.files`, `as` is `io.cozy.files`.
-- **If the query is parameterized**, include the parameters in the alias with `/[PARAM_NAME]/` syntax so each parameter combination gets its own cache entry.
+- **Default `as` = the doctype name.** `Q('io.cozy.files')` → `as: 'io.cozy.files'`.
+- **Primary doc id**: append `/${id}` directly, no `id/` prefix and no trailing slash.
+- **Other parameters**: prefix each with `/<param-name>/${value}`.
 
 ```js
 // ✅ Base query
 Q('io.cozy.files').as('io.cozy.files')
 
-// ✅ Parameterized — one cache bucket per folder id
+// ✅ Query targeting one document by its id (no prefix for id, no trailing slash)
+Q('io.cozy.files').getById(id).as(`io.cozy.files/${id}`)
+
+// ✅ Other parameters get a /<param-name>/ prefix
 Q('io.cozy.files')
   .where({ dir_id: folderId })
-  .as(`io.cozy.files/${folderId}/`)
+  .as(`io.cozy.files/dir/${folderId}`)
 ```
 
 ## Import organization
