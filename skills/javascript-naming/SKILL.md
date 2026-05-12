@@ -41,10 +41,10 @@ Q('io.cozy.files').as('io.cozy.files')
 // ✅ Query targeting one document by its id (no prefix for id, no trailing slash)
 Q('io.cozy.files').getById(id).as(`io.cozy.files/${id}`)
 
-// ✅ Other parameters get a /<param-name>/ prefix
+// ✅ Single identifying parameter — no prefix needed
 Q('io.cozy.files')
   .where({ dir_id: folderId })
-  .as(`io.cozy.files/dir/${folderId}`)
+  .as(`io.cozy.files/${folderId}`)
 ```
 
 ## Import organization
