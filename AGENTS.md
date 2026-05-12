@@ -59,9 +59,11 @@ Q(doctype)
   .where({ ...filters, sortField: { $gt: null } })  // "field exists" sentinel
   .partialIndex({ ... })                            // stack-side filter
   .indexFields([...])                               // REQUIRED for every sortBy field
-  .sortBy([{ field: 'asc' }, ...])
+  .sortBy([{ sortField: 'asc' }, ...])
   .limitBy(100)
 ```
+
+`sortField` above is a placeholder — substitute the actual field name (e.g. `name`, `created_at`). The same name must appear in the `.where()` sentinel, in `.indexFields()`, and in `.sortBy()`.
 
 Two invariants are non-negotiable:
 
