@@ -1,5 +1,5 @@
 ---
-name: react-conventions
+name: twake-react-conventions
 description: Use when writing, reviewing, or refactoring React components in Twake/Cozy frontend projects. Enforces functional components, named exports, React.memo usage, event handler naming, no inline styles, and twake-mui first with cozy-ui as fallback (never raw Material-UI).
 ---
 
@@ -78,7 +78,7 @@ Same rule as the UI library section: if `cozy-ui` / `twake-mui` does not expose 
 
 ## Testing
 
-See the dedicated `frontend-testing` skill for testing rules (testing-library, `data-testid`, `queryBy` patterns, colocated `*.spec.jsx` files, no snapshots).
+See the dedicated `twake-frontend-testing` skill for testing rules (testing-library, `data-testid`, `queryBy` patterns, colocated `*.spec.jsx` files, no snapshots).
 
 ## Dependency rules for libraries
 

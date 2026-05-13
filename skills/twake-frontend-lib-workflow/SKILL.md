@@ -1,5 +1,5 @@
 ---
-name: frontend-lib-workflow
+name: twake-frontend-lib-workflow
 description: Use when debugging, adding features to, or testing changes inside any cozy-* or twake-* library consumed by a Twake/Cozy React frontend app. Forbids hand-editing files under node_modules; directs to the linagora/cozy-libs monorepo and to yarn link or rlink for local testing.
 ---
 
@@ -53,7 +53,7 @@ If the library needs transpilation (most do), start its watch build in parallel 
 
 Once the fix works locally:
 
-1. Commit the change **inside the library repo**, following the `git-conventions` skill (atomic commits, Conventional Commits, structured PR).
+1. Commit the change **inside the library repo**, following the `twake-git-conventions` skill (atomic commits, Conventional Commits, structured PR).
 2. Open a PR on the library repo and get it merged and published.
 3. Bump the dependency version in your app.
 4. Run `yarn unlink` (or the `rlink` unlink equivalent) and a fresh `yarn install` so the app consumes the published version again.

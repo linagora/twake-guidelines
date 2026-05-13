@@ -305,7 +305,7 @@ If the library needs transpilation (most do), start its watch build in parallel 
 
 Once the fix works locally:
 
-1. Commit the change **inside the library repo**, following the `git-conventions` skill (atomic commits, Conventional Commits, structured PR).
+1. Commit the change **inside the library repo**, following the `twake-git-conventions` skill (atomic commits, Conventional Commits, structured PR).
 2. Open a PR on the library repo and get it merged and published.
 3. Bump the dependency version in your app.
 4. Run `yarn unlink` (or the `rlink` unlink equivalent) and a fresh `yarn install` so the app consumes the published version again.
@@ -659,7 +659,7 @@ Do **not** mix: a function called `getUser` that does a network call is misleadi
 
 ### cozy-client queries
 
-When building a `Q()` query, set a descriptive `as` (alias) for caching and debugging. The full naming convention lives in the `cozy-client` skill; the canonical source is the [cozy-guidelines query naming rules](https://github.com/cozy/cozy-guidelines#naming-of-queries). Quick form:
+When building a `Q()` query, set a descriptive `as` (alias) for caching and debugging. The full naming convention lives in the `twake-cozy-client` skill; the canonical source is the [cozy-guidelines query naming rules](https://github.com/cozy/cozy-guidelines#naming-of-queries). Quick form:
 
 - **Default `as` = the doctype name.** `Q('io.cozy.files')` → `as: 'io.cozy.files'`.
 - **Primary doc id**: append `/${id}` directly, no `id/` prefix and no trailing slash.
@@ -778,7 +778,7 @@ Same rule as the UI library section: if `cozy-ui` / `twake-mui` does not expose 
 
 ### Testing
 
-See the dedicated `frontend-testing` skill for testing rules (testing-library, `data-testid`, `queryBy` patterns, colocated `*.spec.jsx` files, no snapshots).
+See the dedicated `twake-frontend-testing` skill for testing rules (testing-library, `data-testid`, `queryBy` patterns, colocated `*.spec.jsx` files, no snapshots).
 
 ### Dependency rules for libraries
 

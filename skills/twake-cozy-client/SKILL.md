@@ -1,5 +1,5 @@
 ---
-name: cozy-client
+name: twake-cozy-client
 description: "Use when reading, writing, or designing data access against a Cozy stack from a Twake/Cozy React app — anything touching cozy-client, doctypes, Q(), client.query, useQuery, or client.collection. Forbids direct collection access that bypasses the redux store and offline cache, enforces Q() definitions through client.query/useQuery, mandates a centralized queries module, query alias naming per cozy-guidelines, an explicit fetchPolicy on every query, and the canonical where/partialIndex/indexFields/sortBy/limitBy pattern with the `{ $gt: null }` sentinel for sortBy fields."
 ---
 

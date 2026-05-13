@@ -1,5 +1,5 @@
 ---
-name: git-conventions
+name: twake-git-conventions
 description: Use when writing commit messages, creating branches, or opening pull requests on Linagora/Twake/Cozy projects. Enforces Conventional Commits, one subject per commit (atomic commits), a structured PR workflow (branch, commit, push, gh pr create), lowercase PR titles under 70 chars, and Summary-only PR bodies with no invented motivation and no em dashes.
 ---
 
