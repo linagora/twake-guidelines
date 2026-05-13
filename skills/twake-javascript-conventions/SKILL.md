@@ -1,5 +1,5 @@
 ---
-name: javascript-conventions
+name: twake-javascript-conventions
 description: Use when writing or reviewing JavaScript/TypeScript in Twake/Cozy projects. Enforces async/await over Promise chains, returning null instead of undefined, date handling via Intl/date-fns (never moment.js), AppLinker for redirections (never window.location), and business-logic-only comments.
 ---
 

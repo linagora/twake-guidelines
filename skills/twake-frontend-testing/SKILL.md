@@ -1,5 +1,5 @@
 ---
-name: frontend-testing
+name: twake-frontend-testing
 description: Use when writing, reviewing, or refactoring frontend tests in Twake/Cozy React projects. Enforces @testing-library/react (never Enzyme or TestCafe), data-testid attributes, queryBy + toBeInDocument()/toBe(null) patterns, colocated *.spec files (no __tests__ folders), and bans snapshot tests.
 ---
 

@@ -22,7 +22,7 @@ Inside any Twake / Linagora project, from the Claude Code prompt:
 /plugin list
 ```
 
-Claude will auto-trigger the relevant skill based on what you are working on (a React file triggers `react-conventions`, a commit triggers `git-conventions`, and so on). No manual activation needed.
+Claude will auto-trigger the relevant skill based on what you are working on (a React file triggers `twake-react-conventions`, a commit triggers `twake-git-conventions`, and so on). No manual activation needed.
 
 **Update / uninstall:**
 
@@ -51,9 +51,9 @@ OpenCode will fetch the aggregated rules file on every session and apply it to a
 ```json
 {
   "instructions": [
-    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/react-conventions/SKILL.md",
-    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/frontend-testing/SKILL.md",
-    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/git-conventions/SKILL.md"
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-twake-react-conventions/SKILL.md",
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-twake-frontend-testing/SKILL.md",
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-twake-git-conventions/SKILL.md"
   ]
 }
 ```
@@ -79,13 +79,13 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 
 | Skill | Applies to | Summary |
 |---|---|---|
-| `react-conventions` | React / JS frontend | Functional components, named exports, twake-mui first then cozy-ui, no inline styles |
-| `javascript-conventions` | JS / TS | async/await, null over undefined, Intl/date-fns (not moment), AppLinker |
-| `javascript-naming` | JS / TS | Function prefixes, cozy-client query `as`, import order |
-| `frontend-testing` | Frontend tests | testing-library, data-testid, queryBy, colocated specs, no snapshots |
-| `frontend-lib-workflow` | React apps consuming cozy-* / twake-* libs | No hand-edits to `node_modules`, yarn link / rlink via cozy-libs monorepo |
-| `cozy-client` | Apps querying a Cozy stack | No direct collection access, Q() + useQuery/client.query, shared queries module, alias naming, mandatory fetchPolicy, sortBy/indexFields invariants |
-| `git-conventions` | All stacks | Conventional Commits, atomic commits, structured PR workflow with Summary-only bodies |
+| `twake-react-conventions` | React / JS frontend | Functional components, named exports, twake-mui first then cozy-ui, no inline styles |
+| `twake-javascript-conventions` | JS / TS | async/await, null over undefined, Intl/date-fns (not moment), AppLinker |
+| `twake-javascript-naming` | JS / TS | Function prefixes, cozy-client query `as`, import order |
+| `twake-frontend-testing` | Frontend tests | testing-library, data-testid, queryBy, colocated specs, no snapshots |
+| `twake-frontend-lib-workflow` | React apps consuming cozy-* / twake-* libs | No hand-edits to `node_modules`, yarn link / rlink via cozy-libs monorepo |
+| `twake-cozy-client` | Apps querying a Cozy stack | No direct collection access, Q() + useQuery/client.query, shared queries module, alias naming, mandatory fetchPolicy, sortBy/indexFields invariants |
+| `twake-git-conventions` | All stacks | Conventional Commits, atomic commits, structured PR workflow with Summary-only bodies |
 
 ### Planned
 
@@ -116,13 +116,13 @@ twake-guidelines/
 │   ├── plugin.json             # Claude Code plugin manifest
 │   └── marketplace.json        # Claude Code marketplace manifest
 ├── skills/                     # Source of truth — per-skill files
-│   ├── react-conventions/SKILL.md
-│   ├── javascript-conventions/SKILL.md
-│   ├── javascript-naming/SKILL.md
-│   ├── frontend-testing/SKILL.md
-│   ├── frontend-lib-workflow/SKILL.md
-│   ├── cozy-client/SKILL.md
-│   └── git-conventions/SKILL.md
+│   ├── twake-react-conventions/SKILL.md
+│   ├── twake-javascript-conventions/SKILL.md
+│   ├── twake-javascript-naming/SKILL.md
+│   ├── twake-frontend-testing/SKILL.md
+│   ├── twake-frontend-lib-workflow/SKILL.md
+│   ├── twake-cozy-client/SKILL.md
+│   └── twake-git-conventions/SKILL.md
 ├── AGENTS.md                   # Generated aggregate for OpenCode / other AGENTS.md consumers
 ├── scripts/
 │   └── gen-agents.sh           # Regenerates AGENTS.md from skills/

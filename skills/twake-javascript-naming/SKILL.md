@@ -1,5 +1,5 @@
 ---
-name: javascript-naming
+name: twake-javascript-naming
 description: Use when naming JavaScript/TypeScript functions, variables, cozy-client queries, or organizing imports in Twake/Cozy projects. Enforces function prefixes (fetch/get/find/has/is/compute/make/normalize/save/ensure/doSomethingAndForget), query `as` naming with doctype and params, and external→internal→local import order.
 ---
 
@@ -28,7 +28,7 @@ Do **not** mix: a function called `getUser` that does a network call is misleadi
 
 ## cozy-client queries
 
-When building a `Q()` query, set a descriptive `as` (alias) for caching and debugging. The full naming convention lives in the `cozy-client` skill; the canonical source is the [cozy-guidelines query naming rules](https://github.com/cozy/cozy-guidelines#naming-of-queries). Quick form:
+When building a `Q()` query, set a descriptive `as` (alias) for caching and debugging. The full naming convention lives in the `twake-cozy-client` skill; the canonical source is the [cozy-guidelines query naming rules](https://github.com/cozy/cozy-guidelines#naming-of-queries). Quick form:
 
 - **Default `as` = the doctype name.** `Q('io.cozy.files')` → `as: 'io.cozy.files'`.
 - **Primary doc id**: append `/${id}` directly, no `id/` prefix and no trailing slash.
