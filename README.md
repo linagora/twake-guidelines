@@ -108,6 +108,30 @@ The script concatenates every `skills/*/SKILL.md` into `AGENTS.md`, stripping YA
 
 Do not hand-edit `AGENTS.md` — changes there will be overwritten on the next regeneration.
 
+## Commands
+
+OpenCode commands — reusable agent prompts that can be invoked from the CLI. Copy the `commands/` folder into your project or reference individual files via `opencode.json`:
+
+```json
+{
+  "commands": [
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/commands/locales.md"
+  ]
+}
+```
+
+## Commands
+
+OpenCode commands — reusable agent prompts that can be invoked from the CLI. Copy the `commands/` folder into your project or reference individual files via `opencode.json`:
+
+```json
+{
+  "commands": [
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/commands/locales.md"
+  ]
+}
+```
+
 ## Layout
 
 ```
@@ -115,6 +139,28 @@ twake-guidelines/
 ├── .claude-plugin/
 │   ├── plugin.json             # Claude Code plugin manifest
 │   └── marketplace.json        # Claude Code marketplace manifest
+├── commands/                   # OpenCode commands — reusable agent prompts
+│   └── locales.md              # Propagate EN locale changes to other languages
+├── skills/                     # Source of truth — per-skill files
+│   ├── twake-react-conventions/SKILL.md
+│   ├── twake-javascript-conventions/SKILL.md
+│   ├── twake-javascript-naming/SKILL.md
+│   ├── twake-frontend-testing/SKILL.md
+│   ├── twake-frontend-lib-workflow/SKILL.md
+│   ├── twake-cozy-client/SKILL.md
+│   └── twake-git-conventions/SKILL.md
+├── AGENTS.md                   # Generated aggregate for OpenCode / other AGENTS.md consumers
+├── scripts/
+│   └── gen-agents.sh           # Regenerates AGENTS.md from skills/
+├── README.md
+└── LICENSE
+```
+twake-guidelines/
+├── .claude-plugin/
+│   ├── plugin.json             # Claude Code plugin manifest
+│   └── marketplace.json        # Claude Code marketplace manifest
+├── commands/                   # OpenCode commands — reusable agent prompts
+│   └── locales.md              # Propagate EN locale changes to other languages
 ├── skills/                     # Source of truth — per-skill files
 │   ├── twake-react-conventions/SKILL.md
 │   ├── twake-javascript-conventions/SKILL.md
