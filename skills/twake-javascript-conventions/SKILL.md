@@ -9,6 +9,16 @@ Apply these rules when writing or modifying JavaScript or TypeScript in any Twak
 
 ## Syntax
 
+### Private members
+
+`#` prefix. Never `_` convention. `#` has native runtime enforcement.
+
+```js
+class ConnectionPool {
+  #connections = [];
+}
+```
+
 ### Equality
 
 Always `===` / `!==`. Never `==` / `!=`.
