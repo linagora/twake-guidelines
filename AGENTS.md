@@ -561,6 +561,16 @@ Apply these rules when writing or modifying JavaScript or TypeScript in any Twak
 
 ### Syntax
 
+#### Private members
+
+`#` prefix. Never `_` convention. `#` has native runtime enforcement.
+
+```js
+class ConnectionPool {
+  #connections = [];
+}
+```
+
 #### Equality
 
 Always `===` / `!==`. Never `==` / `!=`.
@@ -670,6 +680,14 @@ const posts = await fetchPosts(user.id)
 
 // ❌ Avoid
 fetchUser(id).then(user => fetchPosts(user.id)).then(...)
+```
+
+**Fire-and-forget must have `.catch()`**:
+
+```js
+sendAnalyticsEvent(event).catch((e) =>
+  logger.warn({ err: e }, 'Analytics event failed'),
+);
 ```
 
 ### Null vs undefined
