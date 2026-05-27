@@ -130,6 +130,14 @@ const posts = await fetchPosts(user.id)
 fetchUser(id).then(user => fetchPosts(user.id)).then(...)
 ```
 
+**Fire-and-forget must have `.catch()`**:
+
+```js
+sendAnalyticsEvent(event).catch((e) =>
+  logger.warn({ err: e }, 'Analytics event failed'),
+);
+```
+
 ## Null vs undefined
 
 **Return `null` when a value is intentionally absent.** Never return `undefined` on purpose — `undefined` should only appear for unset variables or missing object keys.
