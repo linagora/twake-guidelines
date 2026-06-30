@@ -1,7 +1,7 @@
 ---
 name: twake-typescript-conventions
 requires: twake-javascript-conventions
-description: Use when writing, reviewing, or scaffolding TypeScript in Twake/Cozy projects. Delta over twake-javascript-conventions — read that first. Enforces explicit types and exported types, type vs interface, unknown in catch, satisfies, strict mode, constrained generics, string unions over enums, TC39 decorators, and bans any / as unknown as T / @ts-ignore / unconstrained generics / void without justification.
+description: Use when writing, reviewing, or scaffolding TypeScript in Twake/Cozy projects. Delta over twake-javascript-conventions — read that first. Enforces explicit types and exported types, named exports only (never export default, types included), type vs interface, unknown in catch, satisfies, strict mode, constrained generics, string unions over enums, TC39 decorators, and bans any / as unknown as T / @ts-ignore / unconstrained generics / void without justification.
 ---
 
 # TypeScript Conventions (Twake / Cozy)
@@ -32,6 +32,21 @@ export async function fetchUser(id: string) { ... }
 ```
 
 Third-party packages without `@types` are the only accepted exception. Annotate the call site with `// no types available for <package>` and move on.
+
+---
+
+## Exports
+
+Named exports only — inherited from `twake-javascript-conventions`, and it covers **types** too. Export every type, interface, and value by name; never `export default` anything. A named type keeps "find references" and auto-import working across consumers (see the explicit-types rule above — invisible contracts break silently).
+
+```ts
+// ✅
+export interface UserProfile { ... }
+export type UserResult = { ok: true; value: User } | { ok: false; error: string };
+
+// ❌
+export default interface UserProfile { ... }
+```
 
 ---
 
@@ -210,6 +225,7 @@ Prefer built-in utility types over manual type construction. Extract named inter
 
 Everything from `twake-javascript-conventions`, plus:
 
+- **`export default` (values and types)** — named exports only; keeps every symbol greppable and IDE-refactorable.
 - **`any`** — use a proper type, `unknown` with a guard, or a constrained generic.
 - **`as unknown as T`** — fix the type model instead.
 - **`@ts-ignore`** — use `@ts-expect-error` with explanation and ticket.
