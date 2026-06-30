@@ -1,6 +1,6 @@
 ---
 name: twake-javascript-conventions
-description: Use when writing or reviewing JavaScript/TypeScript in Twake/Cozy projects. Enforces async/await over Promise chains, null over undefined, error handling contract (null / typed result / throw), function declaration style, strict equality, date handling via Intl/date-fns (never moment.js), AppLinker for redirections (never window.location), and business-logic-only comments.
+description: Use when writing or reviewing JavaScript/TypeScript in Twake/Cozy projects. Enforces async/await over Promise chains, null over undefined, error handling contract (null / typed result / throw), function declaration style, strict equality, named exports only (never export default), date handling via Intl/date-fns (never moment.js), AppLinker for redirections (never window.location), and business-logic-only comments.
 ---
 
 # JavaScript Conventions (Twake / Cozy)
@@ -36,6 +36,25 @@ function processOrder(order) {
   return valid.map((item) => item.price * item.quantity);
 }
 ```
+
+### Exports
+
+**Named exports only. Never `export default`.** A named export forces every import site to use the same identifier, so the symbol stays greppable and IDE "find references" / auto-import stay reliable. A default export can be renamed arbitrarily at each import, scattering aliases and making the method impossible to trace across the codebase.
+
+```js
+// ✅ Good — one canonical name everywhere
+export function fetchUser(id) { ... }
+export const MAX_RETRIES = 3;
+
+import { fetchUser } from './user';
+
+// ❌ Forbidden — each caller invents a name, the symbol becomes untraceable
+export default function (id) { ... }
+
+import whateverName from './user';
+```
+
+Re-exports follow the same rule: `export { fetchUser } from './user'`, never `export { default } from './user'`.
 
 ## Error handling
 
@@ -204,3 +223,4 @@ If the comment describes what the code does, delete it and improve the naming in
 - `.then().catch()` chains — use `async/await` + `try/catch`.
 - `moment.js` — use `Intl` or `date-fns` instead.
 - `window.location` for Cozy app navigation — use `AppLinker`.
+- `export default` — use named exports so symbols stay greppable and IDE-refactorable.

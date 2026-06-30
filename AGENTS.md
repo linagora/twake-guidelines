@@ -589,6 +589,25 @@ function processOrder(order) {
 }
 ```
 
+#### Exports
+
+**Named exports only. Never `export default`.** A named export forces every import site to use the same identifier, so the symbol stays greppable and IDE "find references" / auto-import stay reliable. A default export can be renamed arbitrarily at each import, scattering aliases and making the method impossible to trace across the codebase.
+
+```js
+// ✅ Good — one canonical name everywhere
+export function fetchUser(id) { ... }
+export const MAX_RETRIES = 3;
+
+import { fetchUser } from './user';
+
+// ❌ Forbidden — each caller invents a name, the symbol becomes untraceable
+export default function (id) { ... }
+
+import whateverName from './user';
+```
+
+Re-exports follow the same rule: `export { fetchUser } from './user'`, never `export { default } from './user'`.
+
 ### Error handling
 
 **Always return a meaningful value.** Pick the return type by how much information the caller needs:
@@ -756,6 +775,7 @@ If the comment describes what the code does, delete it and improve the naming in
 - `.then().catch()` chains — use `async/await` + `try/catch`.
 - `moment.js` — use `Intl` or `date-fns` instead.
 - `window.location` for Cozy app navigation — use `AppLinker`.
+- `export default` — use named exports so symbols stay greppable and IDE-refactorable.
 
 ---
 
@@ -836,15 +856,9 @@ Apply these rules whenever you are writing or modifying React code in a Twake or
 ### Components
 
 - **Use functional components only** for any new code. Do not write class components.
-- **Named exports preferred** over default exports. This makes refactors and IDE imports predictable.
-  ```js
-  // ✅ Good
-  export const UserCard = ({ user }) => { ... }
-
-  // ❌ Avoid
-  export default UserCard
-  ```
 - **One component per file** when the component is non-trivial.
+
+Export, async, naming, and other language-level rules follow `twake-javascript-conventions` (and `twake-typescript-conventions` for `.tsx`) — including **named exports only, never `export default`**.
 
 ### Performance
 
@@ -944,6 +958,21 @@ export async function fetchUser(id: string) { ... }
 ```
 
 Third-party packages without `@types` are the only accepted exception. Annotate the call site with `// no types available for <package>` and move on.
+
+---
+
+### Exports
+
+Named exports only — inherited from `twake-javascript-conventions`, and it covers **types** too. Export every type, interface, and value by name; never `export default` anything. A named type keeps "find references" and auto-import working across consumers (see the explicit-types rule above — invisible contracts break silently).
+
+```ts
+// ✅
+export interface UserProfile { ... }
+export type UserResult = { ok: true; value: User } | { ok: false; error: string };
+
+// ❌
+export default interface UserProfile { ... }
+```
 
 ---
 
@@ -1122,6 +1151,7 @@ Prefer built-in utility types over manual type construction. Extract named inter
 
 Everything from `twake-javascript-conventions`, plus:
 
+- **`export default` (values and types)** — named exports only; keeps every symbol greppable and IDE-refactorable.
 - **`any`** — use a proper type, `unknown` with a guard, or a constrained generic.
 - **`as unknown as T`** — fix the type model instead.
 - **`@ts-ignore`** — use `@ts-expect-error` with explanation and ticket.

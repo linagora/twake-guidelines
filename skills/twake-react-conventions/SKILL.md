@@ -1,6 +1,6 @@
 ---
 name: twake-react-conventions
-description: Use when writing, reviewing, or refactoring React components in Twake/Cozy frontend projects. Enforces functional components, named exports, React.memo usage, event handler naming, no inline styles, and twake-mui first with cozy-ui as fallback (never raw Material-UI).
+description: Use when writing, reviewing, or refactoring React components in Twake/Cozy frontend projects. Enforces functional components, React.memo usage, event handler naming, no inline styles, and twake-mui first with cozy-ui as fallback (never raw Material-UI).
 ---
 
 # React Conventions (Twake / Cozy)
@@ -10,15 +10,9 @@ Apply these rules whenever you are writing or modifying React code in a Twake or
 ## Components
 
 - **Use functional components only** for any new code. Do not write class components.
-- **Named exports preferred** over default exports. This makes refactors and IDE imports predictable.
-  ```js
-  // ✅ Good
-  export const UserCard = ({ user }) => { ... }
-
-  // ❌ Avoid
-  export default UserCard
-  ```
 - **One component per file** when the component is non-trivial.
+
+Export, async, naming, and other language-level rules follow `twake-javascript-conventions` (and `twake-typescript-conventions` for `.tsx`) — including **named exports only, never `export default`**.
 
 ## Performance
 
