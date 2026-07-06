@@ -86,6 +86,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `twake-frontend-lib-workflow` | React apps consuming cozy-* / twake-* libs | No hand-edits to `node_modules`, yarn link / rlink via cozy-libs monorepo |
 | `twake-cozy-client` | Apps querying a Cozy stack | No direct collection access, Q() + useQuery/client.query, shared queries module, alias naming, mandatory fetchPolicy, sortBy/indexFields invariants |
 | `twake-git-conventions` | All stacks | Conventional Commits, atomic commits, structured PR workflow with Summary-only bodies |
+| `twake-cozy-dev-env` | Cozy-web local dev | Boot cozy-stack + CouchDB + SSO via twake-workplace-docker, serve the locally-watched app, provision via SCIM, seed via ACH |
 
 ### Planned
 
