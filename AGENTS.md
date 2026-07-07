@@ -278,14 +278,33 @@ background, never blocking:
 yarn watch    # cozy-scripts watch --browser, or rsbuild build --watch
 ```
 
-### 3. Boot the cozy subset (background, then poll)
+### 3. Configure `.env`, then boot the cozy subset (background, then poll)
 
-From the `twake-workplace-docker` checkout, point the stack at the local build
-and bring up the subset (`twake_db` + `twake_auth` + `cozy_stack`):
+Set the dev-app variables in the `twake-workplace-docker/.env` file, **not** with
+shell `export`: `compose-wrapper.sh` runs `source ../.env` (and passes
+`--env-file ../.env`), so it overwrites any exported shell variables with the
+`.env` values — an `export COZY_DEV_APP_SLUG=…` in your shell is silently reset
+to whatever `.env` holds. While editing `.env`, confirm the two variables that
+provisioning and sharing depend on are set:
 
 ```bash
-export COZY_DEV_APP_SLUG=<slug>
-export COZY_DEV_APP_BUILD=/abs/path/to/<app>/build
+# twake-workplace-docker/.env
+COZY_DEV_APP_SLUG=<slug>
+COZY_DEV_APP_BUILD=/abs/path/to/<app>/build
+BASE_DOMAIN=twake.local
+COZY_ORG_ID=twp-docker        # instances inherit org_id/org_domain from this
+```
+
+`COZY_ORG_ID` (with `BASE_DOMAIN`) is what gives every provisioned instance a
+matching `org_id`/`org_domain`. Two instances must share the same org for
+cozy-to-cozy / federated shared-drive sharing to auto-accept — set it **before**
+provisioning (step 4), or the instances get an empty org and shares stay pending
+forever.
+
+Then bring up the subset (`twake_db` + `twake_auth` + `cozy_stack`) from the
+`cozy_stack` checkout:
+
+```bash
 cd cozy_stack && ./compose-wrapper.sh up -d --wait
 ```
 
@@ -308,6 +327,22 @@ scripts/twake users list        # require status `ok`; `scim_only` = provisionin
 
 If `users list` shows `scim_only`, stop and surface `auth.dlq` + `cozyt` logs —
 the instance was not created.
+
+For a **sharing / shared-drive test** you need two users (an owner and a
+recipient). Provision both, and confirm they share the same non-empty org
+(inherited from `COZY_ORG_ID`/`BASE_DOMAIN` at step 3) — auto-acceptance of a
+federated share depends on it:
+
+```bash
+for u in user1 user2; do
+  t=$(docker exec cozyt cozy-stack instances token-cli $u.$BASE_DOMAIN io.cozy.settings)
+  docker exec cozyt curl -s -H "Host: $u.$BASE_DOMAIN" -H "Authorization: Bearer $t" \
+    http://localhost:8080/settings/instance   # expect matching org_id + org_domain
+done
+```
+
+An instance provisioned before `COZY_ORG_ID` was set keeps an empty org; destroy
+and re-provision it (step 4) so it picks the org up.
 
 ### 5. Install the local app into the instance
 
@@ -356,6 +391,10 @@ on each rebuild.
 ### Anti-patterns
 
 - Creating instances with `cozy-stack instances add` (bypasses SSO). Use SCIM.
+- `export COZY_DEV_APP_*` (or `BASE_DOMAIN`/`COZY_ORG_ID`) in the shell instead
+  of the `.env` file — `compose-wrapper.sh` sources `.env` and overwrites them.
+- Provisioning users before `COZY_ORG_ID` is set — they get an empty org and
+  federated shares never auto-accept.
 - Editing `node_modules` to test a fix (see `twake-frontend-lib-workflow`).
 - Fabricating seed data instead of the app's ACH fixtures.
 - Blocking the session on `yarn watch` or `compose up` instead of backgrounding.
