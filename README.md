@@ -102,6 +102,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `migrate-to-twake-mui` | cozy-ui to twake-mui migration | One component per PR: move MUI v4 overloads to v9 theme overrides, port the cozy-ui doc examples to Storybook and Argos stories, same render |
 | `twake-create-app` | New Cozy-web app | Decide pure cozy app vs coquille (external backend) by where the backend lives, scaffold from cozy-app-template, wire mandatory Sentry (DSN + release), set up registry publish CI (cozy-app-publish, REGISTRY_TOKEN, tag-driven channels), watch prod CSP |
 | `twake-react-app` | Twake React front-end apps | React 19, twake-mui only (local `@/ds/` for gaps), TanStack Query or cozy-client by backend, Rsbuild, React Router, hexagonal layout, twake-i18n in 7 languages, mandatory OIDC, RGAA / EN 301 549, dockerised self-testing stack |
+| `twake-drive-release` | Twake Drive releases | Prepare and publish first beta, subsequent beta, and final stable releases through GitHub Actions and cozy-app-publish |
 
 ### Planned
 

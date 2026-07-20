@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Twake Drive"
+  short_description: "Release Twake Drive beta and stable versions"
+  default_prompt: "Use $twake-drive-release to prepare and publish the next Twake Drive beta release."
