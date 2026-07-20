@@ -11,6 +11,20 @@ stack. The goal is a prod-faithful local environment (HTTPS + SSO on
 login. It reuses `twake-workplace-docker`; it never spins up a bespoke stack and
 never edits `node_modules`.
 
+## 0. Check the dev-app override exists
+
+The local-app mechanism (`COZY_DEV_APP_SLUG`, `cozy_stack/scripts/install-dev-app.sh`,
+`cozy_stack/docker-compose.dev-app.yml`) is on `main`. Confirm your checkout has it
+before promising anything:
+
+```bash
+ls cozy_stack/scripts/install-dev-app.sh
+```
+
+If missing, your checkout predates it — pull. Without it the stack serves the
+**registry** build, `yarn watch` changes nothing, and every step below that
+mentions the dev app silently no-ops.
+
 ## 1. Detect that this applies
 
 Only proceed if the current app directory has a `manifest.webapp` **and** a cozy
@@ -26,35 +40,85 @@ background, never blocking:
 yarn watch    # cozy-scripts watch --browser, or rsbuild build --watch
 ```
 
-## 3. Configure `.env`, then boot the cozy subset (background, then poll)
+The mount is served live, so a rebuild shows up on a plain browser reload. You do
+**not** reinstall the app after each rebuild.
 
-Set the dev-app variables in the `twake-workplace-docker/.env` file, **not** with
-shell `export`: `compose-wrapper.sh` runs `source ../.env` (and passes
-`--env-file ../.env`), so it overwrites any exported shell variables with the
-`.env` values — an `export COZY_DEV_APP_SLUG=…` in your shell is silently reset
-to whatever `.env` holds. While editing `.env`, confirm the two variables that
-provisioning and sharing depend on are set:
+## 3. Configure `.env`
+
+Set the variables in `twake-workplace-docker/.env`, **not** with shell `export`:
+the wrappers run `source ../.env` (and pass `--env-file ../.env`), so an exported
+`COZY_DEV_APP_SLUG=…` is silently overwritten by whatever `.env` holds.
 
 ```bash
 # twake-workplace-docker/.env
+BASE_DOMAIN=twake.local
 COZY_DEV_APP_SLUG=<slug>
 COZY_DEV_APP_BUILD=/abs/path/to/<app>/build
-BASE_DOMAIN=twake.local
-COZY_ORG_ID=twp-docker        # instances inherit org_id/org_domain from this
+COZY_ORG_ID=twpdocker        # MUST NOT contain a hyphen — see below
 ```
 
-`COZY_ORG_ID` (with `BASE_DOMAIN`) is what gives every provisioned instance a
-matching `org_id`/`org_domain`. Two instances must share the same org for
-cozy-to-cozy / federated shared-drive sharing to auto-accept — set it **before**
-provisioning (step 4), or the instances get an empty org and shares stay pending
-forever.
+`COZY_ORG_ID` must be a valid instance slug. With `subdomains: flat` (the default),
+cozy-stack rejects a `-` in the first label, because `-` separates app from instance
+in `user1-drive.twake.local`. A hyphenated `COZY_ORG_ID` can never match an instance,
+so `IsOrganizationInstance()` is never true, `org_drive` is never set, and
+**shared drives never appear in the Drive sidebar** no matter what the feature flag says.
 
-Then bring up the subset (`twake_db` + `twake_auth` + `cozy_stack`) from the
-`cozy_stack` checkout:
+`org_id` is inherited from `COZY_ORG_ID` **at provisioning time only**. Instances
+created before it was set keep an empty org; destroy and re-provision them.
+
+## 4. Enable the shared-drive feature flag
+
+`cozy_stack/config/default-flags.yaml` ships `drive.shared-drive.enabled: false`.
+Override it without touching the tracked file — the wrapper prefers a gitignored
+`*.local.yaml`:
 
 ```bash
-cd cozy_stack && ./compose-wrapper.sh up -d --wait
+cp cozy_stack/config/default-flags.yaml cozy_stack/config/default-flags.local.yaml
+# then set: drive.shared-drive.enabled: true
 ```
+
+Per-instance flags beat context defaults. If a flag still reads wrong, clear the
+instance's own doc with `scripts/twake flags set <user> <key>=<value>`.
+
+## 5. Let cozy-stack reach its peer instances
+
+`cozy_stack/docker-compose.yml` only maps `auth.${BASE_DOMAIN}` in `extra_hosts`.
+Instance subdomains fall through to the host resolver, where `*.twake.local` is
+`127.0.0.1`, so cozy-stack dials its own loopback on :443 and gets connection
+refused. Add one `extra_hosts` entry per instance domain, pointing at the
+reverse proxy:
+
+```yaml
+extra_hosts:
+  - "auth.${BASE_DOMAIN}:172.27.0.100"
+  - "user1.${BASE_DOMAIN}:172.27.0.100"
+  - "<org-id>.${BASE_DOMAIN}:172.27.0.100"
+```
+
+This failure is **silent**. `SendShortcut` discards its error and falls back to
+email, so a broken peer surfaces only as an unrelated `sendmail has failed`
+warning while the share sits `pending` forever. `extra_hosts` has no wildcard;
+add an entry per test user. Browsers need matching `/etc/hosts` lines
+(`<user>.twake.local` and `<user>-<slug>.twake.local`) — also no wildcard.
+
+## 6. Boot with the root wrapper
+
+Use `wrapper.sh` at the repo root, **not** `cozy_stack/compose-wrapper.sh`.
+The root wrapper resolves dependencies (`--drive` pulls in `twake_auth` →
+`twake_db`) and gates on health. Entering `cozy_stack/` directly starts only
+`cozy-stack` + `patcher-cozy`, and `cozyt` then loops forever on
+`wait-for-it.sh: timeout ... for couchdb:5984`.
+
+```bash
+./wrapper.sh up --drive -d
+```
+
+You do not need `--mail`. A recipient whose Cozy URL is known is reached directly
+by `SendShortcut`, so sharing and auto-accept work with `tmail_app` down; the only
+casualty is a `notifications_sharing` mail job that errors *after* acceptance. Add
+`--mail` only when you need the invitation email itself, i.e. for a recipient with
+no known Cozy URL. The wrappers call `sudo docker` unconditionally; in a
+non-interactive session that blocks on a password prompt.
 
 Do not assume readiness — poll until the stack answers:
 
@@ -62,45 +126,78 @@ Do not assume readiness — poll until the stack answers:
 until docker exec cozyt cozy-stack status 2>/dev/null | grep -q "OK"; do sleep 2; done
 ```
 
-## 4. Provision an instance via SCIM (never `instances add`)
+## 7. Never use `serve --dev`
+
+The dev-app overlay ships `command: [... "serve", "--dev" ...]`. Remove `--dev`.
+It sets `build.BuildMode = ModeDev`, which makes `Instance.Scheme()` return
+`http`, so every absolute URL the stack emits is `http://`. Behind the
+HTTPS-only proxy that means:
+
+- SSO login redirects to `http://…/auth/login` → Traefik `404 page not found`.
+- Auto-accept enqueues, then dies calling the owner back on `http://` → `404`.
+
+The bind mount is served live **without** `--dev`, so removing it costs nothing.
+
+## 8. Provision instances via SCIM (never `instances add`)
 
 Instances are created SSO-side. Provision a user; its `cozyProvision` plugin
 creates the cozy instance:
 
 ```bash
 scripts/twake users add user1 --email user1@example.org \
-  --given-name Test --family-name User
+  --given-name Test --family-name User --password '<pw>'
 scripts/twake users list        # require status `ok`; `scim_only` = provisioning failed
 ```
 
-If `users list` shows `scim_only`, stop and surface `auth.dlq` + `cozyt` logs —
-the instance was not created.
+Omitting `--password` leaves an LDAP user that cannot log in. If `users list`
+shows `scim_only`, stop and surface `auth.dlq` + `cozyt` logs.
 
-For a **sharing / shared-drive test** you need two users (an owner and a
-recipient). Provision both, and confirm they share the same non-empty org
-(inherited from `COZY_ORG_ID`/`BASE_DOMAIN` at step 3) — auto-acceptance of a
-federated share depends on it:
+For **shared drives** you also need the organization instance, whose slug equals
+`COZY_ORG_ID`:
 
 ```bash
-for u in user1 user2; do
-  t=$(docker exec cozyt cozy-stack instances token-cli $u.$BASE_DOMAIN io.cozy.settings)
-  docker exec cozyt curl -s -H "Host: $u.$BASE_DOMAIN" -H "Authorization: Bearer $t" \
-    http://localhost:8080/settings/instance   # expect matching org_id + org_domain
-done
+scripts/twake users add twpdocker --email org@example.org \
+  --given-name Org --family-name Instance --password '<pw>'
 ```
 
-An instance provisioned before `COZY_ORG_ID` was set keeps an empty org; destroy
-and re-provision it (step 4) so it picks the org up.
+Only drives created **on that instance** get `org_drive: true`, and the Drive
+sidebar (`SharedDriveList`) renders nothing but org drives. A drive created on a
+normal user instance is a valid sharing that never shows up in the nav.
 
-## 5. Install the local app into the instance
+## 9. Install the local app into the instance
 
-Idempotent; in `serve --dev` the mounted build is served live afterwards:
+Wait until the auto-installed app is `ready` first, or the reconcile races
+provisioning and fails with `CouchDB(conflict): Document update conflict`:
 
 ```bash
+until [ "$(docker exec cozyt cozy-stack apps show <slug> --domain user1.$BASE_DOMAIN \
+  | python3 -c 'import sys,json;print(json.load(sys.stdin)["state"])')" = ready ]; do sleep 2; done
+
 cozy_stack/scripts/install-dev-app.sh --slug <slug> --domain user1.$BASE_DOMAIN
 ```
 
-## 6. Seed data on request (ACH, reuse the app's fixtures)
+Confirm it took: `cozy-stack apps show <slug> --domain …` must report
+`source = file:///app/<slug>`, not `registry://…`.
+
+## 10. Auto-acceptance, when you need it
+
+Auto-accept only ever fires for **drive** sharings — `web/sharings/sharings.go`
+fences it behind `if s.Drive`. A plain folder share is never auto-accepted, by
+design. It also requires trust, from `cozy_stack/config/default-sharing.yaml`:
+
+```yaml
+auto_accept_trusted: true
+auto_accept_trusted_contacts: true
+trusted_domains: [ ${BASE_DOMAIN} ]     # suffix match: covers user1.twake.local
+```
+
+`org_id` plays **no part** in the trust decision. Trust is the sender's instance
+domain matching `trusted_domains`, or a contact flagged `trustedForSharing`
+(which the RabbitMQ org contact sync sets, and which needs a non-empty
+`org_domain`). A share discovered interactively (`?interactive=true`) is never
+auto-accepted.
+
+## 11. Seed data on request (ACH, reuse the app's fixtures)
 
 Only if asked, and only from the app's own fixtures — never fabricate data.
 Detect a `fixtures` script / `fixtures/*.json`, mint a doctype-scoped token, and
@@ -113,36 +210,44 @@ ACH import fixtures/contacts.json -u https://user1.$BASE_DOMAIN -t "$TOKEN"
 
 If the app ships no fixtures, say so and stop.
 
-## 7. Report the live URL and login
+## 12. Report the live URL and login
 
 Hand back, explicitly, so another session can verify changes:
 
 - URL: `https://user1-<slug>.$BASE_DOMAIN`
-- Login: SSO test user `user1`
+- Login: SSO test user `user1` and the password you provisioned it with
 - Note to trust the Traefik root-CA once for green HTTPS.
 
-## 8. Teardown
+## 13. Teardown
 
 ```bash
 scripts/twake users destroy user1 --yes
-cd cozy_stack && ./compose-wrapper.sh down -v
+./wrapper.sh down --drive
 ```
 
 ## Prerequisites and references
 
-One-time host setup (`/etc/hosts` for `*.twake.local`, trust the root-CA,
-`docker network create twake-network`) and the full flow are documented in
-`twake-workplace-docker/docs/local-app-dev.md`. If `--dev` ever misbehaves
-behind the OIDC/Traefik context, fall back to prod `serve` and reinstall the app
-on each rebuild.
+One-time host setup (`/etc/hosts` per instance, trust the root-CA,
+`docker network create twake-network`). `docs/cookbook.md` documents
+`scripts/twake flags set`; `docs/upgrade-federated-sharing.md` covers
+`SAFE_HTTP_TRUSTED_PRIVATE_NETWORKS`, which cozy-stack needs to call private IPs
+at all.
 
 ## Anti-patterns
 
+- Booting from `cozy_stack/` instead of the root `wrapper.sh` — CouchDB never
+  starts and `cozyt` stays unhealthy.
+- Keeping `--dev` in the dev-app overlay — breaks SSO login and auto-accept.
+- A hyphenated `COZY_ORG_ID` — silently disables shared drives forever.
+- Assuming `extra_hosts` covers instance domains — peer calls hit loopback and
+  fail silently into an email fallback.
+- Expecting auto-accept on a non-drive share, or on a drive created outside the
+  org instance.
+- Blaming `org_id` for auto-acceptance. It gates the shared-drive **nav** via
+  `org_drive`, not the trust decision.
 - Creating instances with `cozy-stack instances add` (bypasses SSO). Use SCIM.
-- `export COZY_DEV_APP_*` (or `BASE_DOMAIN`/`COZY_ORG_ID`) in the shell instead
-  of the `.env` file — `compose-wrapper.sh` sources `.env` and overwrites them.
-- Provisioning users before `COZY_ORG_ID` is set — they get an empty org and
-  federated shares never auto-accept.
+- `export COZY_DEV_APP_*` in the shell instead of the `.env` file.
+- Reinstalling the app after each rebuild — the mount is already served live.
 - Editing `node_modules` to test a fix (see `twake-frontend-lib-workflow`).
 - Fabricating seed data instead of the app's ACH fixtures.
 - Blocking the session on `yarn watch` or `compose up` instead of backgrounding.
