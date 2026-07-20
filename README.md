@@ -88,6 +88,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `twake-git-conventions` | All stacks | Conventional Commits, atomic commits, structured PR workflow with Summary-only bodies |
 | `twake-start` | All stacks | Sync the detected default branch (main or master), pull, cut a feat/fix/chore branch before writing code |
 | `twake-cozy-dev-env` | Cozy-web local dev | Boot cozy-stack + CouchDB + SSO via twake-workplace-docker, serve the locally-watched app, provision via SCIM, seed via ACH |
+| `twake-package-manager-audit` | Any npm / yarn / pnpm project | Detect the package manager, clear audit vulns by upgrading real deps only (no overrides/resolutions), defer the rest, one PR per project |
 
 ### Planned
 
