@@ -85,8 +85,10 @@ The user types their email or org server; you resolve their SSO / login URL from
 2. `GET https://<domain>/.well-known/twake-configuration` (JSON).
 3. Read **`twake-flagship-login-uri`** — the org's flagship/cloudery login URL
    (`twake-pass-login-uri` is the Twake Pass variant).
-4. Open that URI in the system browser with your `redirect_after_oidc=<scheme>://`;
-   it returns `<scheme>://?fqdn=…&code=…` (consume via the Stack register flow below).
+4. Open that URI in the system browser with your `redirect_after_oidc=<scheme>://`
+   **and `login_hint=<the email from step 1>`** so the SSO page comes up pre-filled
+   instead of asking for the address the user just typed; it returns
+   `<scheme>://?fqdn=…&code=…` (consume via the Stack register flow below).
 
 ### OIDC app (talks to its own backend, e.g. tmail/JMAP) → WebFinger
 
@@ -96,7 +98,9 @@ Resolve the SSO/OIDC provider from the server, like `tmail-flutter`:
 2. The response's `links[0].href` is the OIDC **authority** (SSO provider). Empty
    links → the server does not advertise SSO.
 3. `GET <authority>/.well-known/openid-configuration` for the OIDC endpoints, then run
-   the standard OIDC Authorization Code + PKCE flow against that authority.
+   the standard OIDC Authorization Code + PKCE flow against that authority. Pass the
+   email/identifier the user typed as `login_hint` on the authorize request so the SSO
+   page is pre-filled.
 
 ## Reaching the Cozy Stack
 
@@ -167,3 +171,5 @@ split.) If the app never opens such URLs, either surface is fine.
   external pages (Docs) — the cookie lands in the wrong jar and those pages re-prompt;
   use SFSVC (`openBrowserAsync`) for the login.
 - Adding a redirect scheme to only one cloudery partner controller — update all.
+- On the org-server login, not forwarding the email the user just typed as
+  `login_hint` — the SSO page asks them for it a second time.
