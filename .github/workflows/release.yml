@@ -27,4 +27,8 @@ jobs:
           PR: ${{ steps.release.outputs.pr }}
         run: |
           number=$(echo "$PR" | jq -r '.number')
-          gh pr merge "$number" --squash --auto || gh pr merge "$number" --squash
+          # -R is required: this job has no checkout, so without it `gh pr merge`
+          # tries to detect the repo from a local .git and fails. --auto only works
+          # when a required check is pending; with none, fall back to a direct merge.
+          gh pr merge "$number" -R "$GITHUB_REPOSITORY" --squash --auto \
+            || gh pr merge "$number" -R "$GITHUB_REPOSITORY" --squash
