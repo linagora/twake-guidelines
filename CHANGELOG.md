@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/linagora/twake-guidelines/compare/v0.2.0...v0.3.0) (2026-07-27)
+
+
+### Features
+
+* pass login_hint on the org-server login in twake-mobile-login ([9ca16fa](https://github.com/linagora/twake-guidelines/commit/9ca16fa1d2045ab3d2b9f257459de5766831e2a4))
+* **skill:** add twake-mobile-login skill ([c42dca6](https://github.com/linagora/twake-guidelines/commit/c42dca6d454debcf2e49e2e07670d9c8bb806652))
+
+
+### Bug Fixes
+
+* merge the release PR with -R so gh works without a checkout ([c998f84](https://github.com/linagora/twake-guidelines/commit/c998f8436419d864231d51b5f318270f5d715437))
+
 ## [0.2.0](https://github.com/linagora/twake-guidelines/compare/v0.1.0...v0.2.0) (2026-07-24)
 
 
