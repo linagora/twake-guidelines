@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/linagora/twake-guidelines/compare/v0.3.0...v0.4.0) (2026-07-27)
+
+
+### Features
+
+* **twake-create-app:** add skill to create a new twake/cozy web app ([06929df](https://github.com/linagora/twake-guidelines/commit/06929df7b0220df64257e173ff585af878873031))
+
 ## [0.3.0](https://github.com/linagora/twake-guidelines/compare/v0.2.0...v0.3.0) (2026-07-27)
 
 
