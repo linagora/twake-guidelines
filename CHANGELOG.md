@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/linagora/twake-guidelines/compare/v0.4.0...v0.5.0) (2026-07-28)
+
+
+### Features
+
+* Improve opencode setup ([786b3c9](https://github.com/linagora/twake-guidelines/commit/786b3c987876a15a7fca098e3aad33ba2888f474))
+* Improve opencode setup ([0aeae5e](https://github.com/linagora/twake-guidelines/commit/0aeae5e0a2b329f75614ce428aa9940f905504b9))
+
 ## [0.4.0](https://github.com/linagora/twake-guidelines/compare/v0.3.0...v0.4.0) (2026-07-27)
 
 
