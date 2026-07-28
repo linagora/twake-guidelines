@@ -1,0 +1,10 @@
+{
+  "name": "twake-guidelines",
+  "version": "0.4.0",
+  "description": "Linagora Twake coding guidelines as skills — React, JavaScript, Cozy Client, Java, Go, Git conventions",
+  "type": "module",
+  "main": ".opencode/plugins/twake-guidelines.js",
+  "homepage": "https://github.com/linagora/twake-guidelines",
+  "repository": "https://github.com/linagora/twake-guidelines",
+  "license": "MIT"
+}

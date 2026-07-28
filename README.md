@@ -33,7 +33,22 @@ Claude will auto-trigger the relevant skill based on what you are working on (a 
 
 ### OpenCode
 
-Add an `opencode.json` to your project root:
+**Plugin (recommended)**
+
+Add to your global `~/.config/opencode/opencode.json` or a project's `opencode.json` to register :
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["twake-guidelines@git+https://github.com/linagora/twake-guidelines.git"]
+}
+```
+
+OpenCode will auto-trigger the relevant skill based on what you are working on (a React file triggers `twake-react-conventions`, a commit triggers `twake-git-conventions`, and so on). No manual activation needed.
+
+**Alternative: aggregate rules file**
+
+If you prefer a single rule without the plugin, point `instructions` at the raw `AGENTS.md`:
 
 ```json
 {
@@ -44,26 +59,20 @@ Add an `opencode.json` to your project root:
 }
 ```
 
-OpenCode will fetch the aggregated rules file on every session and apply it to all requests.
+OpenCode will fetch the aggregated rule file on every session and apply it to all requests.
 
-**Prefer selective loading?** Replace the one URL with the specific skill files you want:
+**Alternative: selective rules loading**
+
+Replace the aggreagated rules file URL with the specific files you want:
 
 ```json
 {
   "instructions": [
-    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-twake-react-conventions/SKILL.md",
-    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-twake-frontend-testing/SKILL.md",
-    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-twake-git-conventions/SKILL.md"
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-react-conventions/SKILL.md",
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-frontend-testing/SKILL.md",
+    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-git-conventions/SKILL.md"
   ]
 }
-```
-
-**Global install** (applies to every OpenCode session, not just this project): copy the aggregate file once:
-
-```bash
-mkdir -p ~/.config/opencode
-curl -fsSL https://raw.githubusercontent.com/linagora/twake-guidelines/main/AGENTS.md \
-  > ~/.config/opencode/AGENTS.md
 ```
 
 ### Other agents
@@ -81,6 +90,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 |---|---|---|
 | `twake-react-conventions` | React / JS frontend | Functional components, named exports, twake-mui first then cozy-ui, no inline styles |
 | `twake-javascript-conventions` | JS / TS | async/await, null over undefined, Intl/date-fns (not moment), AppLinker |
+| `twake-typescript-conventions` | JS / TS | async/await, null over undefined, Intl/date-fns (not moment), AppLinker |
 | `twake-javascript-naming` | JS / TS | Function prefixes, cozy-client query `as`, import order |
 | `twake-frontend-testing` | Frontend tests | testing-library, data-testid, queryBy, colocated specs, no snapshots |
 | `twake-frontend-lib-workflow` | React apps consuming cozy-* / twake-* libs | No hand-edits to `node_modules`, yarn link / rlink via cozy-libs monorepo |
@@ -124,18 +134,6 @@ OpenCode commands — reusable agent prompts that can be invoked from the CLI. C
 }
 ```
 
-## Commands
-
-OpenCode commands — reusable agent prompts that can be invoked from the CLI. Copy the `commands/` folder into your project or reference individual files via `opencode.json`:
-
-```json
-{
-  "commands": [
-    "https://raw.githubusercontent.com/linagora/twake-guidelines/main/commands/locales.md"
-  ]
-}
-```
-
 ## Layout
 
 ```
@@ -148,31 +146,16 @@ twake-guidelines/
 ├── skills/                     # Source of truth — per-skill files
 │   ├── twake-react-conventions/SKILL.md
 │   ├── twake-javascript-conventions/SKILL.md
+│   ├── twake-typescript-conventions/SKILL.md
 │   ├── twake-javascript-naming/SKILL.md
 │   ├── twake-frontend-testing/SKILL.md
 │   ├── twake-frontend-lib-workflow/SKILL.md
 │   ├── twake-cozy-client/SKILL.md
 │   └── twake-git-conventions/SKILL.md
-├── AGENTS.md                   # Generated aggregate for OpenCode / other AGENTS.md consumers
-├── scripts/
-│   └── gen-agents.sh           # Regenerates AGENTS.md from skills/
-├── README.md
-└── LICENSE
-```
-twake-guidelines/
-├── .claude-plugin/
-│   ├── plugin.json             # Claude Code plugin manifest
-│   └── marketplace.json        # Claude Code marketplace manifest
-├── commands/                   # OpenCode commands — reusable agent prompts
-│   └── locales.md              # Propagate EN locale changes to other languages
-├── skills/                     # Source of truth — per-skill files
-│   ├── twake-react-conventions/SKILL.md
-│   ├── twake-javascript-conventions/SKILL.md
-│   ├── twake-javascript-naming/SKILL.md
-│   ├── twake-frontend-testing/SKILL.md
-│   ├── twake-frontend-lib-workflow/SKILL.md
-│   ├── twake-cozy-client/SKILL.md
-│   └── twake-git-conventions/SKILL.md
+│   └── twake-start/SKILL.md
+│   └── twake-cozy-dev-env/SKILL.md
+│   └── twake-package-manager-audit/SKILL.md
+│   └── twake-create-app/SKILL.md
 ├── AGENTS.md                   # Generated aggregate for OpenCode / other AGENTS.md consumers
 ├── scripts/
 │   └── gen-agents.sh           # Regenerates AGENTS.md from skills/
