@@ -1,6 +1,6 @@
 {
   "name": "twake-guidelines",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Linagora Twake coding guidelines as Claude Code skills — React, JavaScript, Cozy Client, Java, Go, Git conventions",
   "author": {
     "name": "Linagora",
