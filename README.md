@@ -33,7 +33,22 @@ Claude will auto-trigger the relevant skill based on what you are working on (a 
 
 ### OpenCode
 
-Add an `opencode.json` to your project root:
+**Plugin (recommended)**
+
+Add to your global `~/.config/opencode/opencode.json` or a project's `opencode.json` to register :
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["twake-guidelines@git+https://github.com/linagora/twake-guidelines.git"]
+}
+```
+
+OpenCode will auto-trigger the relevant skill based on what you are working on (a React file triggers `twake-react-conventions`, a commit triggers `twake-git-conventions`, and so on). No manual activation needed.
+
+**Alternative: aggregate rules file**
+
+If you prefer a single rule without the plugin, point `instructions` at the raw `AGENTS.md`:
 
 ```json
 {
@@ -44,9 +59,11 @@ Add an `opencode.json` to your project root:
 }
 ```
 
-OpenCode will fetch the aggregated rules file on every session and apply it to all requests.
+OpenCode will fetch the aggregated rule file on every session and apply it to all requests.
 
-**Prefer selective loading?** Replace the one URL with the specific skill files you want:
+**Alternative: selective rules loading**
+
+Replace the aggreagated rules file URL with the specific files you want:
 
 ```json
 {
@@ -56,14 +73,6 @@ OpenCode will fetch the aggregated rules file on every session and apply it to a
     "https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-twake-git-conventions/SKILL.md"
   ]
 }
-```
-
-**Global install** (applies to every OpenCode session, not just this project): copy the aggregate file once:
-
-```bash
-mkdir -p ~/.config/opencode
-curl -fsSL https://raw.githubusercontent.com/linagora/twake-guidelines/main/AGENTS.md \
-  > ~/.config/opencode/AGENTS.md
 ```
 
 ### Other agents
