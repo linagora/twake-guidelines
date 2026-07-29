@@ -35,7 +35,7 @@ BREAKING CHANGE: describe the break and migration path.
 
 ### Rules
 
-- **Subject in imperative mood**: "add pagination", not "added" or "adds".
+- **Subject in imperative mood with sentence-case (first letter uppercase)**: "Add pagination", not "added" or "adds".
 - **Body explains WHY when the reason is known and non-obvious.** If the diff speaks for itself, a subject alone is enough.
 - **Do not invent motivation.** If you do not know *why* the change is happening, state the *what* plainly instead of manufacturing a rationale.
 - **Wrap body at 72 chars per line**.
@@ -106,9 +106,9 @@ The PR body describes **only what the current diff changes**. Nothing else.
 ### Commit subjects
 
 ```
-✅ feat(auth): add passwordless magic-link login
-✅ fix(calendar): prevent duplicate events on timezone change
-✅ chore(deps): upgrade react-query from 4.2 to 4.3
+✅ feat(auth): Add passwordless magic-link login
+✅ fix(calendar): Prevent duplicate events on timezone change
+✅ chore(deps): Upgrade react-query from 4.2 to 4.3
 
 ❌ Updated stuff
 ❌ fix: bug
