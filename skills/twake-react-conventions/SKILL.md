@@ -80,3 +80,19 @@ If you are working inside a shared library (not an app):
 - `react` and `react-dom` go in `devDependencies` **and** `peerDependencies` — never in `dependencies`.
 - Do not import Material-UI at all.
 - Do not add cross-dependencies between `cozy-*` libraries.
+- **Never import `cozy-flags` in a library.** Feature flags (`flag('...')`) are an app-level concern. A library component that needs flag-gated behavior must expose a boolean prop with a sensible default; the app reads the flag and passes it as the prop value.
+
+```jsx
+// ❌ Library reads the flag directly
+import flag from 'cozy-flags'
+const FederatedModal = () =>
+  flag('drive.federated') ? <A /> : <B />
+
+// ✅ Library exposes a boolean prop
+const FederatedModal = ({ isFederatedMode = false }) =>
+  isFederatedMode ? <A /> : <B />
+
+// ✅ App consumes the flag and feeds the prop
+import flag from 'cozy-flags'
+<FederatedModal isFederatedMode={flag('drive.federated')} />
+```
