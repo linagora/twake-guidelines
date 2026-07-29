@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/linagora/twake-guidelines/compare/v0.5.0...v0.6.0) (2026-07-29)
+
+
+### Features
+
+* **guidelines:** Add cozy-flags library rule and sentence-case commit subjects ([0d76143](https://github.com/linagora/twake-guidelines/commit/0d76143476429000dcd092b5f540692752a7043a))
+* **guidelines:** Add cozy-flags library rule and sentence-case commit subjects ([1581fa2](https://github.com/linagora/twake-guidelines/commit/1581fa27a634f97dc852721aaca179c698003f0a))
+
 ## [0.5.0](https://github.com/linagora/twake-guidelines/compare/v0.4.0...v0.5.0) (2026-07-28)
 
 
