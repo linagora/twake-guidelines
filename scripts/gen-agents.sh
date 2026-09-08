@@ -4,11 +4,17 @@
 # - Strips YAML frontmatter (the block between the first two `---` lines).
 # - Demotes ATX headings by one level (# -> ##, ## -> ###, ...) so that the
 #   H1 of each skill becomes a section under AGENTS.md's own H1.
-# - Leaves headings inside fenced code blocks (```...```) untouched.
+# - Rewrites skill-relative `references/...` paths to raw URLs, since a skill's
+#   supporting files are not aggregated and AGENTS.md is usually read from a URL
+#   with no skills/ directory beside it.
+# - Leaves headings and paths inside fenced code blocks (```...```) untouched.
 #
 # Run from anywhere; paths resolve relative to the repo root.
 
 set -euo pipefail
+
+# Base for rewriting skill-relative reference paths into fetchable URLs.
+raw_base="https://raw.githubusercontent.com/linagora/twake-guidelines/main"
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
@@ -40,7 +46,9 @@ for skill in "${skills[@]}"; do
     echo ""
   } >> "$out"
 
-  awk '
+  skill_dir="$(dirname "$skill")"
+
+  awk -v ref_base="$raw_base/$skill_dir/references/" '
     BEGIN { fm_state = 0; in_fence = 0 }   # fm_state: 0=pre, 1=inside, 2=post
     {
       if (fm_state < 2 && $0 == "---") {
@@ -51,7 +59,10 @@ for skill in "${skills[@]}"; do
       if (fm_state == 0) { fm_state = 2 }  # no frontmatter, treat all as body
 
       if ($0 ~ /^```/) { in_fence = !in_fence; print; next }
-      if (!in_fence && $0 ~ /^#+[[:space:]]/) { print "#" $0; next }
+      if (!in_fence) {
+        gsub(/(\.\/)?references\//, ref_base)
+        if ($0 ~ /^#+[[:space:]]/) { print "#" $0; next }
+      }
       print
     }
   ' "$skill" >> "$out"
