@@ -99,6 +99,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `twake-start` | All stacks | Sync the detected default branch (main or master), pull, cut a feat/fix/chore branch before writing code |
 | `twake-cozy-dev-env` | Cozy-web local dev | Boot cozy-stack + CouchDB + SSO via twake-workplace-docker, serve the locally-watched app, provision via SCIM, seed via ACH |
 | `twake-package-manager-audit` | Any npm / yarn / pnpm project | Detect the package manager, clear audit vulns by upgrading real deps only (no overrides/resolutions), defer the rest, one PR per project |
+| `migrate-to-twake-mui` | cozy-ui to twake-mui migration | One component per PR: apply the Twake Library API revision, move MUI v4 overloads to v9 theme overrides, add Storybook and Argos stories |
 | `twake-create-app` | New Cozy-web app | Decide pure cozy app vs coquille (external backend) by where the backend lives, scaffold from cozy-app-template, wire mandatory Sentry (DSN + release), set up registry publish CI (cozy-app-publish, REGISTRY_TOKEN, tag-driven channels), watch prod CSP |
 
 ### Planned
@@ -156,6 +157,7 @@ twake-guidelines/
 │   └── twake-cozy-dev-env/SKILL.md
 │   └── twake-package-manager-audit/SKILL.md
 │   └── twake-create-app/SKILL.md
+│   └── migrate-to-twake-mui/SKILL.md
 ├── AGENTS.md                   # Generated aggregate for OpenCode / other AGENTS.md consumers
 ├── scripts/
 │   └── gen-agents.sh           # Regenerates AGENTS.md from skills/
