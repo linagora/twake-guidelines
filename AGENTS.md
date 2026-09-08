@@ -35,7 +35,7 @@ A wrapper that only forwards props to MUI is a bug. Delete it and style through 
 
 ### Step 1 — Decide whether to migrate at all
 
-Read `references/api-revision.md`. Find the component.
+Read `https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/migrate-to-twake-mui/references/api-revision.md`. Find the component.
 
 - Listed as ❌ or ✅ (removed / to be removed) → **stop**. Report what replaces it (e.g. Spinner →
   `CircularProgress`, Banner → `Alert`/`SnackbarContent`, SelectBox → `TextField select`) and open
@@ -81,7 +81,7 @@ reviewable on its own.
 |---|---|
 | cozy-ui implementation | `react/<Name>/index.jsx` + `Readme.md`, and `stylus/components/*<name>*` in a [cozy-ui](https://github.com/cozy/cozy-ui) checkout |
 | Twake Library design | Figma, see below |
-| MUI v9 API | `references/mui-v4-to-v9.md`, then https://mui.com/material-ui/llms.txt when unsure |
+| MUI v9 API | `https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/migrate-to-twake-mui/references/mui-v4-to-v9.md`, then https://mui.com/material-ui/llms.txt when unsure |
 
 **Figma (Library Twake).** Resolve the component with `search_design_system`, scoped to the library
 to avoid the other Linagora design systems:

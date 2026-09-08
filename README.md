@@ -113,13 +113,15 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 
 Each skill lives in `skills/<name>/SKILL.md` with YAML frontmatter (`name`, `description`). The `description` field decides when Claude Code auto-triggers the skill — be specific about the trigger context.
 
+A skill too large for one file can keep supporting material in `skills/<name>/references/`, and link to it with a plain relative path (`references/foo.md`). Only `SKILL.md` is aggregated, so the generator rewrites those paths to raw URLs in `AGENTS.md`, where there is no `skills/` directory to resolve them against.
+
 **After editing any skill, regenerate `AGENTS.md`:**
 
 ```bash
 ./scripts/gen-agents.sh
 ```
 
-The script concatenates every `skills/*/SKILL.md` into `AGENTS.md`, stripping YAML frontmatter and demoting headings by one level. It has no dependencies (pure Bash + `awk`). Commit the regenerated `AGENTS.md` alongside the skill change.
+The script concatenates every `skills/*/SKILL.md` into `AGENTS.md`, stripping YAML frontmatter, demoting headings by one level, and rewriting `references/` paths to raw URLs. Fenced code blocks are left alone throughout. It has no dependencies (pure Bash + `awk`). Commit the regenerated `AGENTS.md` alongside the skill change.
 
 Do not hand-edit `AGENTS.md` — changes there will be overwritten on the next regeneration.
 
