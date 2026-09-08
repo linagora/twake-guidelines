@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.1](https://github.com/linagora/twake-guidelines/compare/v0.7.0...v0.7.1) (2026-09-08)
+
+
+### Bug Fixes
+
+* **guidelines:** Update twake-mui override file names ([45c886c](https://github.com/linagora/twake-guidelines/commit/45c886c8d79a90f2879a666b5b66307ca7bf43f5))
+* **guidelines:** Update twake-mui override file names ([d818444](https://github.com/linagora/twake-guidelines/commit/d8184440238004f7c0a17c992a57c21a4d43873d))
+
 ## [0.7.0](https://github.com/linagora/twake-guidelines/compare/v0.6.0...v0.7.0) (2026-09-08)
 
 
