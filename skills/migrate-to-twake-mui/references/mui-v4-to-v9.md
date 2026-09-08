@@ -6,7 +6,7 @@ Almost all of the breakage is in the v4 → v5 step; that is what this file cove
 **For v6, v7, v8 and v9 deltas, fetch https://mui.com/material-ui/llms.txt and read the
 relevant page. Do not guess them from memory.** What is already known to matter here:
 v6+ supports `variants: [{ props, style }]` inside `styleOverrides` (used throughout
-`makeLightOverrides.tsx`) and CSS theme variables; `Grid2` became `Grid`.
+`lightOverrides.tsx`) and CSS theme variables; `Grid2` became `Grid`.
 
 ## Imports
 
@@ -26,7 +26,7 @@ In twake-mui, import from `@mui/material` in source files. Consumers import from
 heavily; do not port them.
 
 - Component-level styling → `styled()` from `@mui/material/styles`, or the `sx` prop.
-- Library-wide styling → `styleOverrides` in `src/lib/makeLightOverrides.tsx`. **Prefer this.**
+- Library-wide styling → `styleOverrides` in `src/lib/lightOverrides.tsx`. **Prefer this.**
 
 ```js
 // v4 theme

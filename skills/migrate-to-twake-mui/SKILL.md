@@ -19,7 +19,7 @@ Twake Library revision strips most of those props. So the ranked outcomes are:
 
 1. **Nothing to write.** The revision says "remove everything" and the visual delta is covered
    by the palette/typography already in the theme. Report that, no PR.
-2. **Theme only.** Add a `MuiXxx` entry to `src/lib/makeLightOverrides.tsx` (+ `makeDarkOverrides.ts`
+2. **Theme only.** Add a `MuiXxx` entry to `src/lib/lightOverrides.tsx` (+ `darkOverrides.ts`
    if the dark render differs). No component file. This is the common case.
 3. **Theme + thin wrapper.** Only when a prop needs JS: composing children, mapping a prop to a
    class, injecting a default `deleteIcon`. See `src/components/Chip/index.tsx` (~45 lines) for the
@@ -46,7 +46,7 @@ stories by component, never by filename:
 ```bash
 cd packages/twake-mui
 ls src/components/
-grep -n "Mui<Name>" src/lib/makeLightOverrides.tsx src/lib/makeDarkOverrides.ts
+grep -n "Mui<Name>" src/lib/lightOverrides.tsx src/lib/darkOverrides.ts
 grep -rln "<Name>" src/stories/
 ```
 
@@ -101,7 +101,7 @@ the cozy-ui screenshots, and say in the PR that the Figma pixel check was skippe
 Work in a [twake-ui](https://github.com/linagora/twake-ui) checkout, Node 24 (`nvm use`), branch cut from the synced default branch
 (`twake-start` conventions): `git checkout -b feat/<name>-twake-mui`.
 
-- **Theme:** `packages/twake-mui/src/lib/makeLightOverrides.tsx`, keys in `Mui<Name>` order matching
+- **Theme:** `packages/twake-mui/src/lib/lightOverrides.tsx`, keys in `Mui<Name>` order matching
   the file. Use `radius` from `src/lib/radius`, `paletteData` from `palette.json`, and MUI
   `variants: [{ props, style }]` inside `styleOverrides.root` rather than a prop-driven class,
   whenever the switch is on a real MUI prop. Reserve `'&.<class>'` selectors for props MUI does not
@@ -128,12 +128,12 @@ Work in a [twake-ui](https://github.com/linagora/twake-ui) checkout, Node 24 (`n
   `theme.typography.pxToRem(n)` so they scale with the reader's browser font size. Hardcoding
   `'20px'` drops that, and mixing the two leaves some sizes scaling and others frozen. Use
   `pxToRem` for font sizes; padding stays in px like the rest of the file.
-- **Dark mode:** `makeDarkOverrides` merges `makeLightOverrides` wholesale, so every value you add
-  applies to the dark theme too. `theme.palette.*` flips on its own and needs nothing; a literal
-  colour from `palette.json` (a near-black border, a near-white fill) does not, and will be
-  invisible on the other background. Add its counterpart to `makeOverridesForDarkTheme` in
-  `src/lib/makeDarkOverrides.ts` in the same commit, and render the dark story before claiming it
-  works.
+- **Dark mode:** `src/lib/darkOverrides.ts` is a bare `merge({}, lightOverrides)`, so every value
+  you add applies to the dark theme too. `theme.palette.*` flips on its own and needs nothing; a
+  literal colour from `palette.json` (a near-black border, a near-white fill) does not, and will be
+  invisible on the other background. Add its counterpart as a second `merge` argument in the same
+  commit, and render the dark story before claiming it works. Read the file first: it holds no
+  dark-specific block today, so you may be the one introducing it.
 - **Wrapper (only for outcome 3 of the core principle):** `src/components/<Name>/index.tsx`, default + named export,
   props interface extending the MUI props, `cx` from `classnames` for class merging.
 - **Export:** add to `src/index.ts` under `// COMPONENTS & HELPERS` and its type under `// TYPES`.
