@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/linagora/twake-guidelines/compare/v0.6.0...v0.7.0) (2026-09-08)
+
+
+### Features
+
+* **guidelines:** Add the migrate-to-twake-mui skill ([cb5f2da](https://github.com/linagora/twake-guidelines/commit/cb5f2dae6bb8732a78708487189aef89c9f65bab))
+
+
+### Bug Fixes
+
+* **guidelines:** Rewrite skill reference paths to URLs when generating ([5285907](https://github.com/linagora/twake-guidelines/commit/5285907ae6bc41fbde52cb902e2b615ea0772844))
+
 ## [0.6.0](https://github.com/linagora/twake-guidelines/compare/v0.5.0...v0.6.0) (2026-07-29)
 
 
