@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/linagora/twake-guidelines/compare/v0.8.0...v0.9.0) (2026-09-09)
+
+
+### Features
+
+* Require cozy-ui documented examples in migration stories ([5f2c285](https://github.com/linagora/twake-guidelines/commit/5f2c2857f3108fc6baf1f7fd7cf7d8c305ade23c))
+
 ## [0.8.0](https://github.com/linagora/twake-guidelines/compare/v0.7.1...v0.8.0) (2026-09-09)
 
 
