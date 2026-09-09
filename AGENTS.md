@@ -136,6 +136,12 @@ theme-only override. Two stories, both required:
 
 Copy the shape from `src/components/Avatar/Avatar.stories.tsx`.
 
+**Cover at least what cozy-ui documented.** Read the component's cozy-ui docs page
+(`https://docs.cozy.io/cozy-ui/react/#/<Name>`, and its `Readme.md`) and list the examples it
+shows. Every one of them needs an equivalent in the stories, minus the props the revision dropped.
+A consumer migrating comes to Storybook looking for the usage they already know, and an example
+that disappears reads as a feature that disappeared.
+
 ### Step 5 — Verify before claiming anything
 
 ```bash
