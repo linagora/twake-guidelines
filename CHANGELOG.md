@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/linagora/twake-guidelines/compare/v0.9.0...v0.10.0) (2026-09-09)
+
+
+### Features
+
+* Remove API Revision check from cozy-ui migration skill ([83bc696](https://github.com/linagora/twake-guidelines/commit/83bc696e242e2c9d4ba471347ea561300118cb74))
+
 ## [0.9.0](https://github.com/linagora/twake-guidelines/compare/v0.8.0...v0.9.0) (2026-09-09)
 
 
