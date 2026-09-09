@@ -53,14 +53,14 @@ grep -rln "<Name>" src/stories/
 Partial coverage is the normal starting point. Extend the existing override and the existing story
 rather than adding a parallel one.
 
-**Audit any existing override before building on it.** Check every value against the Library and
-the Figma node, and confirm the rule still does what it looks like it does. A frequent case:
+**Audit any existing override before building on it.** Check every value against the API revision
+and MUI's own defaults, and confirm the rule still does what it looks like it does. A frequent case:
 `styleOverrides.root` is applied *after* MUI's own `variants`, so a bare `color` or `padding` on
 `root` silently replaces the whole `color` and `size` axis and every variant renders identically.
 Judge from computed styles read back in Storybook, not from the CSS.
 
-If the override does not correspond to the Library, remove it, and make that removal the **first
-commit**, subject only, no body:
+If the override does not correspond to the API revision, remove it, and make that removal the
+**first commit**, subject only, no body:
 
 ```
 fix(twake-mui): Clean old <Component> override
@@ -69,32 +69,12 @@ fix(twake-mui): Clean old <Component> override
 Then build the correct override in the next commit. Keep the two apart so the removal stays
 reviewable on its own.
 
-## Step 2 — Read the three sources
+## Step 2 — Read the two sources
 
 | Source | Where |
 |---|---|
 | cozy-ui implementation | `react/<Name>/index.jsx` + `Readme.md`, and `stylus/components/*<name>*` in a [cozy-ui](https://github.com/cozy/cozy-ui) checkout |
-| Twake Library design | Figma, see below |
 | MUI v9 API | `references/mui-v4-to-v9.md`, then https://mui.com/material-ui/llms.txt when unsure |
-
-**Figma (Library Twake).** Resolve the component with `search_design_system`, scoped to the library
-to avoid the other Linagora design systems:
-
-```
-mcp__plugin_figma_figma__search_design_system
-  fileKey: 6Sf5ux54xWxOjwN3j7gL78
-  queries: [{ entity: "component", query: "<Name>" }]
-  includeLibraryKeys: ["lk-9365af4dc2ba778310eea224da86c5215dea185e78a50c667049d4e55d08a7ded596d68376c83b1f0df7c886269389429357d338d3cc36931724eedfca6afefe"]
-```
-
-Components there are named with an emoji prefix (`👤 avatar`, `🔷 chip`) and are `component_set`s,
-so the variants of the set are the states you must cover.
-
-`get_metadata` on this file only lists the Cover page (Figma lazy-loads the rest), so you cannot
-enumerate pages reliably. To see pixels you need a nodeId: ask the user for the node URL of the
-component page (`.../Library-Twake?node-id=1-2`), then `get_design_context` / `get_screenshot`.
-Ask once, and if the user does not have it, continue from `search_design_system` variant names plus
-the cozy-ui screenshots, and say in the PR that the Figma pixel check was skipped.
 
 ## Step 3 — Implement
 
@@ -106,23 +86,21 @@ Work in a [twake-ui](https://github.com/linagora/twake-ui) checkout, Node 24 (`n
   `variants: [{ props, style }]` inside `styleOverrides.root` rather than a prop-driven class,
   whenever the switch is on a real MUI prop. Reserve `'&.<class>'` selectors for props MUI does not
   have (see `MuiChip` `.square`).
-- **Ask when Figma and MUI disagree.** The Library names things by design intent, MUI by prop
-  name, and they do not always line up: the names can match while the values do not, or the value
-  can exist under a different prop. When a column, variant or state has no unambiguous MUI
+- **Ask when the revision and MUI disagree.** The revision names props by intent, MUI by its own
+  prop names, and they do not always line up: the names can match while the values do not, or the
+  behaviour can exist under a different prop. When a variant or state has no unambiguous MUI
   counterpart, stop and ask the user which mapping they want, giving the options and what each
-  costs. Do not pick one silently. Which prop a designed state answers to is an API decision for
-  every consuming app, not a styling detail, and a wrong guess is invisible in the screenshots
-  because the pixels still match. Example: the IconButton Library has a "Secondary" column whose
-  token is `text.secondary` (grey), but MUI's `color="secondary"` resolves to
-  `palette.secondary.main` (blue) and its grey is `color="default"`, so a developer reading the
-  Figma and writing `color="secondary"` gets a colour that appears nowhere in the design.
+  costs. Do not pick one silently. Which prop a state answers to is an API decision for every
+  consuming app, not a styling detail, and a wrong guess is invisible in the screenshots because
+  the pixels still match. Example: `text.secondary` (grey) reads like MUI's `color="secondary"`,
+  which actually resolves to `palette.secondary.main` (blue); MUI's grey is `color="default"`.
 - **Write only the delta.** Before adding any variant, read what MUI already does for that
-  component and keep only the declarations that differ from the design. The installed source is
-  the authority, not memory or the docs:
+  component and keep only the declarations that differ from it. The installed source is the
+  authority, not memory or the docs:
   ```bash
   sed -n '1,200p' node_modules/@mui/material/<Name>/<Name>.js | grep -n "padding\|fontSize\|color\|variants\|props:"
   ```
-  MUI's defaults are often already the Library value, and a redundant variant reads as a
+  MUI's defaults are often already the revised value, and a redundant variant reads as a
   deliberate deviation while pinning a value MUI would otherwise keep in step.
 - **Express sizes the way MUI does.** MUI states font sizes in rem via
   `theme.typography.pxToRem(n)` so they scale with the reader's browser font size. Hardcoding
@@ -171,12 +149,10 @@ repo root, then re-run; do not "fix" unrelated files. If failures remain, prove 
 pre-existing rather than asserting it: `git stash && npm run lint ... ; git stash pop`, compare the
 counts, and report the baseline.
 
-Visual check, both directions:
-
-- **vs Twake Library** — the Figma screenshot from step 2, variant by variant.
-- **vs cozy-ui** — screenshot `https://docs.cozy.io/cozy-ui/react/#/<Name>` with the
-  `claude-in-chrome` skill and compare. Differences are expected wherever the revision removed a
-  prop; anything else is a regression. State the intentional differences in the PR body.
+Visual check against cozy-ui: screenshot `https://docs.cozy.io/cozy-ui/react/#/<Name>` with the
+`claude-in-chrome` skill and compare it with the Storybook render. Differences are expected
+wherever the revision removed a prop; anything else is a regression. State the intentional
+differences in the PR body.
 
 Argos itself runs in CI on the PR (`npm run screenshots` locally needs `ARGOS_TOKEN`, do not
 bother). Baselines land when the PR is opened.
@@ -190,8 +166,8 @@ One PR, and up to three commits, each atomic and in this order. Only the middle 
 present:
 
 1. `fix(twake-mui): Clean old <Component> override` — subject only, no body. Present when step 1
-   found an existing override that does not match the Library.
-2. `feat(twake-mui): Align <Component> with the Twake Library` — the migration itself: the
+   found an existing override that does not match the API revision.
+2. `feat(twake-mui): Align <Component> with the Twake API revision` — the migration itself: the
    override, the type augmentation if any, and the component's own story.
 3. `chore(twake-mui): ...` — updates to *other* components' stories that your change forced. A
    shared override moves every consumer, so when another story has to change to stay correct, it
