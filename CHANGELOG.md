@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/linagora/twake-guidelines/compare/v0.10.0...v0.11.0) (2026-09-09)
+
+
+### Features
+
+* Simplify migrate-to-twake-mui skill ([5b5dc5e](https://github.com/linagora/twake-guidelines/commit/5b5dc5e0e3fa54cb20e44514098c4ebb8390fa9f))
+
 ## [0.10.0](https://github.com/linagora/twake-guidelines/compare/v0.9.0...v0.10.0) (2026-09-09)
 
 
