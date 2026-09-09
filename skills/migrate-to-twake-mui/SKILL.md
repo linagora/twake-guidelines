@@ -79,15 +79,27 @@ Work in a [twake-ui](https://github.com/linagora/twake-ui) checkout, Node 24 (`n
   `variants: [{ props, style }]` inside `styleOverrides.root` rather than a prop-driven class,
   whenever the switch is on a real MUI prop. Reserve `'&.<class>'` selectors for props MUI does not
   have (see `MuiChip` `.square`).
-- **Ask when the cozy-ui prop has no clean MUI counterpart.** cozy-ui names props by intent, MUI by
-  its own prop names, and they do not always line up: the names can match while the values do not,
-  or the behaviour can exist under a different prop. When a variant or state has no unambiguous MUI
-  counterpart, stop and ask the user which mapping they want, giving the options and what each
-  costs. Do not pick one silently. Which prop a state answers to is an API decision for every
-  consuming app, not a styling detail, and a wrong guess is invisible in the screenshots because
-  the pixels still match. Example: cozy-ui's `text.secondary` (grey) reads like MUI's
-  `color="secondary"`, which actually resolves to `palette.secondary.main` (blue); MUI's grey is
-  `color="default"`.
+- **cozy-ui is the source of truth; carry over whatever MUI lacks.** When cozy-ui has a size,
+  variant, state or default that MUI v9 has no equivalent for, add it and keep going. Do not stop
+  to ask the user: the cozy-ui render already decides it, and consuming apps need the prop to
+  survive the migration. Augment the MUI prop union when the missing piece is one more value on a
+  prop MUI does have, and reserve a `'&.<class>'` selector for what MUI has no prop for at all:
+  ```ts
+  // src/lib/types.ts — cozy-ui's IconButton had a fourth size above `large`
+  declare module '@mui/material/IconButton' {
+    interface IconButtonPropsSizeOverrides {
+      xlarge: true
+    }
+  }
+  ```
+  Whatever the cozy-ui wrapper defaulted to becomes `defaultProps`, since the wrapper that used to
+  apply it is going away.
+- **Map on the render, not on the name.** cozy-ui names props by intent and MUI by its own prop
+  names, so the names can match while the values do not. Read what cozy-ui actually paints for a
+  given prop value and find the MUI prop that paints the same. Example: cozy-ui's `text.secondary`
+  (grey) reads like MUI's `color="secondary"`, which actually resolves to `palette.secondary.main`
+  (blue); MUI's grey is `color="default"`. A wrong guess here is invisible in the screenshots
+  because the pixels still match.
 - **Write only the delta.** Before adding any variant, read what MUI already does for that
   component and keep only the declarations that differ from it. The installed source is the
   authority, not memory or the docs:
