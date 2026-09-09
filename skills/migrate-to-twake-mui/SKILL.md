@@ -47,10 +47,7 @@ Partial coverage is the normal starting point. Extend the existing override and 
 rather than adding a parallel one.
 
 **Audit any existing override before building on it.** Check every value against the cozy-ui
-render and MUI's own defaults, and confirm the rule still does what it looks like it does. A
-frequent case: `styleOverrides.root` is applied *after* MUI's own `variants`, so a bare `color` or
-`padding` on `root` silently replaces the whole `color` and `size` axis and every variant renders
-identically. Judge from computed styles read back in Storybook, not from the CSS.
+render and MUI's own defaults, and confirm the rule still does what it looks like it does.
 
 If the existing override is wrong rather than incomplete, remove it, and make that removal the
 **first commit**, subject only, no body:
@@ -79,15 +76,8 @@ Work in a [twake-ui](https://github.com/linagora/twake-ui) checkout, Node 24 (`n
   `variants: [{ props, style }]` inside `styleOverrides.root` rather than a prop-driven class,
   whenever the switch is on a real MUI prop. Reserve `'&.<class>'` selectors for props MUI does not
   have (see `MuiChip` `.square`).
-- **Ask when the cozy-ui prop has no clean MUI counterpart.** cozy-ui names props by intent, MUI by
-  its own prop names, and they do not always line up: the names can match while the values do not,
-  or the behaviour can exist under a different prop. When a variant or state has no unambiguous MUI
-  counterpart, stop and ask the user which mapping they want, giving the options and what each
-  costs. Do not pick one silently. Which prop a state answers to is an API decision for every
-  consuming app, not a styling detail, and a wrong guess is invisible in the screenshots because
-  the pixels still match. Example: cozy-ui's `text.secondary` (grey) reads like MUI's
-  `color="secondary"`, which actually resolves to `palette.secondary.main` (blue); MUI's grey is
-  `color="default"`.
+- **cozy-ui is the source of truth; carry over whatever MUI lacks.** When cozy-ui has a size,
+  variant, state or default that MUI v9 has no equivalent for, add it and keep going.
 - **Write only the delta.** Before adding any variant, read what MUI already does for that
   component and keep only the declarations that differ from it. The installed source is the
   authority, not memory or the docs:
@@ -126,9 +116,7 @@ Copy the shape from `src/components/Avatar/Avatar.stories.tsx`.
 
 **Port every example the cozy-ui doc shows.** Read the component's cozy-ui docs page
 (`https://docs.cozy.io/cozy-ui/react/#/<Name>`, and its `Readme.md`) and list the examples it
-shows. Every one of them needs an equivalent in the stories. A consumer migrating comes to
-Storybook looking for the usage they already know, and an example that disappears reads as a
-feature that disappeared.
+shows. Every one of them needs an equivalent in the stories.
 
 ## Step 5 — Verify before claiming anything
 
@@ -167,27 +155,27 @@ present:
 
 1. `fix(twake-mui): Clean old <Component> override` — subject only, no body. Present when step 1
    found an existing override that was wrong.
-2. `feat(twake-mui): Migrate <Component> from cozy-ui` — the migration itself: the override, the
-   type augmentation if any, and the component's own story.
+2. `feat(twake-mui): Migrate <Component> from cozy-ui` — subject only, no body. The migration
+   itself: the override, the type augmentation if any, and the component's own story. That the
+   migration migrated the component is the subject line's job; do not restate it in a body.
 3. `chore(twake-mui): ...` — updates to *other* components' stories that your change forced. A
    shared override moves every consumer, so when another story has to change to stay correct, it
    goes in its own commit, never folded into the migration. That keeps the migration diff readable
    and lets the collateral be reverted on its own.
 
-`feat` for a new component or override, `feat!` / `BREAKING CHANGE:` when a cozy-ui prop consumers
-use has no equivalent in the migrated component. multi-semantic-release derives the published
-version from this.
+**Never explain the what or the how — only the why and the context.** This governs commit bodies
+and the PR body alike. The diff already states what changed and how it works, and a prose replay of
+it is noise, however well written. What the diff cannot show is why this needed doing, what was
+wrong before, or why a non-obvious approach beat the obvious one. Nothing else earns a sentence.
 
-**Write the why, not the what.** This governs commit bodies and the PR body alike. The diff already
-states what changed and how, and restating it in prose is noise. What the diff cannot show is the
-context: why this needed doing, what was wrong before, why a non-obvious approach was chosen over
-the obvious one. Write that, in as few sentences as it takes. A commit whose change is
-self-evident needs no body at all.
+Default to no body at all. A body is the exception, for the rare case where the why is genuinely
+not guessable from the subject and the diff.
 
-Then `gh pr create`, title lowercase and under 70 chars. A few short paragraphs of plain prose.
-**Never write a "Summary" heading**, or any heading: the body is short enough not to need one.
-This overrides the Summary-only wording in `twake-git-conventions`. No invented motivation, no
-em dashes, no tables.
+Then `gh pr create`, title under 70 chars. **Keep the body short: three short
+sentences at the outside, and fewer whenever fewer will do.** Plain prose, no headings at all and
+never a "Summary" heading (this overrides the Summary-only wording in `twake-git-conventions`), no
+invented motivation, no em dashes, no tables.
 
-The PR body is not a work log. Leave out the stories and the checks you ran; the diff shows the
-first and CI shows the second. Report those to the user in chat instead.
+If a paragraph describes the override you wrote, the props you mapped, the values you picked, or how
+the theme resolves them, delete it. Same for the stories and the checks you ran: the diff shows the
+first, CI shows the second. Report all of that to the user in chat instead.
