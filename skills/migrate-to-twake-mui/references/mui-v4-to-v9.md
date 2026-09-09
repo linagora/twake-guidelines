@@ -72,7 +72,7 @@ cozy-ui source before hand-porting:
 npx @mui/codemod@latest v5.0.0/preset-safe <path>
 ```
 
-It does not touch `makeStyles`, and it knows nothing about the Twake API revision. Treat its output
+It does not touch `makeStyles`, and it knows nothing about the cozy-ui component it replaces. Treat its output
 as a starting point, never as the migration.
 
 ## Docs
