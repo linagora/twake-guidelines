@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/linagora/twake-guidelines/compare/v0.7.1...v0.8.0) (2026-09-09)
+
+
+### Features
+
+* Remove Twake Library check from cozy-ui migration skill ([c5118de](https://github.com/linagora/twake-guidelines/commit/c5118de0e1f282cbf762b5f8b328bf88a1699875))
+
 ## [0.7.1](https://github.com/linagora/twake-guidelines/compare/v0.7.0...v0.7.1) (2026-09-08)
 
 
