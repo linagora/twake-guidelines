@@ -12,7 +12,7 @@ Apply these rules when committing code, writing commit messages, branching, or o
 Use **Conventional Commits**:
 
 ```
-type(scope): subject line in imperative mood
+type(scope): Subject line in imperative mood
 
 Body explaining WHY this change is needed, when the reason is
 known and non-obvious from the diff. Wrap body lines at 72
