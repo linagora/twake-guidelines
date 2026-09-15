@@ -201,19 +201,23 @@ window.location.href = 'https://myapp.mycozy.cloud/drive'
 
 ## Comments
 
-**Only comment business-logic complexity** — the *why*, not the *what*. Do not comment obvious code.
+**Comment only when truly necessary**: JSDoc for public APIs, or a short note on a hack, workaround, or piece of code that stays non-obvious even after good naming. Everything else — what changed and why, the history of a decision — belongs in the commit message, not in the code. Do not comment obvious code, and do not narrate the change you just made.
 
 ```js
 // ❌ Useless — the code already says this
 // Increment counter by one
 counter += 1
 
-// ✅ Useful — explains a non-obvious constraint
+// ❌ Useless — this belongs in the commit message, not the code
+// Fixed off-by-one bug reported in #482
+const debouncedSave = debounce(save, 50)
+
+// ✅ Useful — explains a non-obvious constraint that survives naming
 // Backend rejects requests below 50ms apart, so debounce before firing
 const debouncedSave = debounce(save, 50)
 ```
 
-If the comment describes what the code does, delete it and improve the naming instead.
+If the comment describes what the code does, or why the current commit changed it, delete it and improve the naming instead.
 
 ## Forbidden
 
