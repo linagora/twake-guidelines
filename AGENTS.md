@@ -994,6 +994,16 @@ A commit must handle **exactly one subject**. Multiple concerns in a single comm
 
 If the commit subject needs the word "and" to describe the change, split the commit.
 
+### Revising commits after self-review or feedback
+
+When a re-read (yours or a reviewer's) shows that an earlier commit in the branch needs to change, rewrite that commit in place. Do not stack a new commit on top whose only purpose is to patch an earlier one.
+
+- **Never add a "fix previous commit" / fixup-style commit that exists only to correct an earlier commit in the same branch.** It forces whoever reads the history to accept commit N, then later find commit N+k quietly undoing or reshaping part of it — the branch is only correct after reading to the end, not at any commit in between.
+- Rewrite with `git commit --fixup=<sha>` followed by `git rebase -i --autosquash`, or a plain `git rebase -i` to edit, reorder, or squash commits, so each commit in the final branch already reflects its intended final state.
+- If several commits collapse into one coherent change once corrected, squash them.
+- Rewriting local/unpushed commits needs no confirmation. Rewriting a branch already pushed (or already under review) requires `git push --force-with-lease` (never plain `--force`, never to `main`/`master`) — confirm with the user first, since it rewrites shared history.
+- Exception: if a PR already has reviewer comments anchored to specific commits or lines and rewriting would erase that review trail, ask the user whether to rewrite anyway or add a clearly-scoped follow-up commit instead.
+
 ### Branches
 
 - Feature branches: `feat/short-description`
