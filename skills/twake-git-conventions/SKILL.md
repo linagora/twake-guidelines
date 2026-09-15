@@ -14,9 +14,10 @@ Use **Conventional Commits**:
 ```
 type(scope): Subject line in imperative mood
 
-Body explaining WHY this change is needed, when the reason is
-known and non-obvious from the diff. Wrap body lines at 72
-characters.
+Body explaining WHY this change is needed, or HOW the
+underlying issue was tracked down to this fix, when that
+reasoning is non-obvious from the diff. Wrap body lines at
+72 characters.
 
 BREAKING CHANGE: describe the break and migration path.
 ```
@@ -36,8 +37,9 @@ BREAKING CHANGE: describe the break and migration path.
 ### Rules
 
 - **Subject in imperative mood with sentence-case (first letter uppercase)**: "Add pagination", not "added" or "adds".
-- **Body explains WHY when the reason is known and non-obvious.** If the diff speaks for itself, a subject alone is enough.
-- **Do not invent motivation.** If you do not know *why* the change is happening, state the *what* plainly instead of manufacturing a rationale.
+- **No body if the title and diff are self-explanatory.** A well-scoped, obvious change needs no description — an extra paragraph that just restates the diff is noise. Skip the body entirely in that case.
+- **When a body is warranted, it explains WHY or HOW — never WHAT.** The code already shows what changed; a body that describes that is redundant. Only add a body to explain the reason the change is needed, or how you got from the symptom to this particular fix, when that reasoning is genuinely non-obvious from the diff.
+- **Do not invent motivation.** If you do not know *why* the change is happening and there is no non-obvious *how* to explain, omit the body rather than manufacturing a rationale or restating the diff.
 - **Wrap body at 72 chars per line**.
 - **Breaking changes** must include a `BREAKING CHANGE:` footer with migration guidance.
 
