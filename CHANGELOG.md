@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.12.0](https://github.com/linagora/twake-guidelines/compare/v0.11.0...v0.12.0) (2026-09-15)
+
+
+### Features
+
+* Adjust comment directive to avoid useless comments ([8fbfeac](https://github.com/linagora/twake-guidelines/commit/8fbfeacb27ed7a4e4a8d8e65e5840e532336cb2a))
+* Check branch context before starting a new task ([5834ab8](https://github.com/linagora/twake-guidelines/commit/5834ab829982c2ee5f3b6783cc4f391fdc999f14))
+* Update how to deal with commit description ([1325e28](https://github.com/linagora/twake-guidelines/commit/1325e28364206f6dbdf2ada1639e7ca2b353c016))
+
 ## [0.11.0](https://github.com/linagora/twake-guidelines/compare/v0.10.0...v0.11.0) (2026-09-09)
 
 
