@@ -1743,6 +1743,13 @@ Apply at the very beginning of a task, before writing any code, to land on a fre
 
 ### Steps
 
+0. **Check the working tree matches the task before touching anything.** Run `git status --short` and note the current branch.
+   - If the repo is clean and already on the default branch, skip to step 1.
+   - If there is uncommitted code (staged or not) or the current branch belongs to a different subject than the task about to start, **do not build the new task on top of it**. Commit the pending work as-is on its current branch first (an atomic commit per `twake-git-conventions` — do not stash it away or discard it), then proceed to step 1 for a clean branch.
+   - If the uncommitted code or current branch **is** the same subject as the task (a continuation of the same feature/fix), stay on it and skip step 1-3 — keep working there instead of cutting a new branch.
+
+   This avoids mixing two unrelated features/fixes into the same branch or commit.
+
 1. **Detect the default branch.** Never assume `main`; Twake and upstream Cozy repos are a mix of `main` and `master`. Read it from the remote:
    ```bash
    git remote set-head origin --auto >/dev/null 2>&1
