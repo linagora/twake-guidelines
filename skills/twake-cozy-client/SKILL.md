@@ -1,6 +1,6 @@
 ---
 name: twake-cozy-client
-description: "Use when reading, writing, or designing data access against a Cozy stack from a Twake/Cozy React app — anything touching cozy-client, doctypes, Q(), client.query, useQuery, or client.collection. Forbids direct collection access that bypasses the redux store and offline cache, enforces Q() definitions through client.query/useQuery, mandates a centralized queries module, query alias naming per cozy-guidelines, an explicit fetchPolicy on every query, and the canonical where/partialIndex/indexFields/sortBy/limitBy pattern with the `{ $gt: null }` sentinel for sortBy fields."
+description: "Use when reading, writing, or designing data access against a Cozy stack from a Twake/Cozy React app — anything touching cozy-client, doctypes, Q(), client.query, useQuery, or client.collection. Forbids direct collection access that bypasses the redux store and offline cache, enforces Q() definitions through client.query/useQuery, mandates a centralized queries module, query alias naming per cozy-guidelines, an explicit fetchPolicy on every query, and the canonical where/partialIndex/indexFields/sortBy/limitBy pattern with the `{ $gt: null }` sentinel for sortBy fields. Also use when changing code inside the cozy-client repository itself (packages/cozy-client, packages/cozy-pouch-link), before committing or pushing a PR there."
 ---
 
 # Cozy Client Patterns (Twake / Cozy)
@@ -233,6 +233,42 @@ Pick the policy that matches the data's freshness needs:
 
 When in doubt, default to `olderThan(60 * 1000)` and adjust based on how often the doctype changes.
 
+## Contributing to the cozy-client repository itself
+
+The rules above cover apps that *consume* cozy-client. This section covers changes made *inside* the [cozy-client repository](https://github.com/linagora/cozy-client) (`packages/cozy-client`, `packages/cozy-pouch-link`, ...).
+
+Two artifacts are generated from the source and committed to the repo:
+
+- **API docs** under `docs/api/**` (typedoc). Every entry carries a `Defined in packages/.../File.js:LINE` link, so *any* line added or removed in a documented file, a JSDoc edit, or a signature change alters the generated docs, even if you did not touch a public API.
+- **TypeScript declarations** under `packages/*/types/**` (`tsc`), altered by any type or JSDoc change.
+
+CI regenerates both and fails the build when the committed output differs from the regenerated one:
+
+```
+Docs are not up-to-date, please run yarn docs and repush
+Types are not up-to-date, please run cd packages/cozy-client && yarn typecheck and repush
+```
+
+### Pre-push sequence
+
+Every push to a cozy-client branch is preceded by this sequence, from the repo root, in this order:
+
+```bash
+yarn test          # unit tests
+yarn docs          # regenerates docs/api/**
+yarn types         # regenerates packages/*/types/**
+git status         # docs/ and types/ must be clean or staged
+```
+
+Then stage and commit the regenerated files as part of the PR. A separate commit is fine:
+
+```bash
+git add docs packages/*/types
+git commit -m "docs: Regenerate API documentation"
+```
+
+`yarn lint` and `yarn test` passing does not mean the PR is ready: neither of them touches `docs/` or `types/`. A change that "only edits a comment" or "only adds two lines" still shifts line numbers and still needs the sequence.
+
 ## Anti-patterns
 
 - `client.collection(...)` reads or writes in app code.
@@ -245,3 +281,4 @@ When in doubt, default to `olderThan(60 * 1000)` and adjust based on how often t
 - Filtering inside `partialIndex` and expecting it to apply offline — pouch ignores it as a filter.
 - Calling `client.query` for its return value when the cache may be fresh — use `client.fetchQueryAndGetFromState` instead.
 - One mixed query for a folder listing instead of separate directories / files queries.
+- Pushing a cozy-client repository change without running `yarn docs` and `yarn types` and committing the regenerated `docs/` and `types/` output.
