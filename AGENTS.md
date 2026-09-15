@@ -954,9 +954,10 @@ Use **Conventional Commits**:
 ```
 type(scope): Subject line in imperative mood
 
-Body explaining WHY this change is needed, when the reason is
-known and non-obvious from the diff. Wrap body lines at 72
-characters.
+Body explaining WHY this change is needed, or HOW the
+underlying issue was tracked down to this fix, when that
+reasoning is non-obvious from the diff. Wrap body lines at
+72 characters.
 
 BREAKING CHANGE: describe the break and migration path.
 ```
@@ -976,8 +977,9 @@ BREAKING CHANGE: describe the break and migration path.
 #### Rules
 
 - **Subject in imperative mood with sentence-case (first letter uppercase)**: "Add pagination", not "added" or "adds".
-- **Body explains WHY when the reason is known and non-obvious.** If the diff speaks for itself, a subject alone is enough.
-- **Do not invent motivation.** If you do not know *why* the change is happening, state the *what* plainly instead of manufacturing a rationale.
+- **No body if the title and diff are self-explanatory.** A well-scoped, obvious change needs no description — an extra paragraph that just restates the diff is noise. Skip the body entirely in that case.
+- **When a body is warranted, it explains WHY or HOW — never WHAT.** The code already shows what changed; a body that describes that is redundant. Only add a body to explain the reason the change is needed, or how you got from the symptom to this particular fix, when that reasoning is genuinely non-obvious from the diff.
+- **Do not invent motivation.** If you do not know *why* the change is happening and there is no non-obvious *how* to explain, omit the body rather than manufacturing a rationale or restating the diff.
 - **Wrap body at 72 chars per line**.
 - **Breaking changes** must include a `BREAKING CHANGE:` footer with migration guidance.
 
@@ -1294,19 +1296,23 @@ window.location.href = 'https://myapp.mycozy.cloud/drive'
 
 ## Comments
 
-**Only comment business-logic complexity** — the *why*, not the *what*. Do not comment obvious code.
+**Comment only when truly necessary**: JSDoc for public APIs, or a short note on a hack, workaround, or piece of code that stays non-obvious even after good naming. Everything else — what changed and why, the history of a decision — belongs in the commit message, not in the code. Do not comment obvious code, and do not narrate the change you just made.
 
 ```js
 // ❌ Useless — the code already says this
 // Increment counter by one
 counter += 1
 
-// ✅ Useful — explains a non-obvious constraint
+// ❌ Useless — this belongs in the commit message, not the code
+// Fixed off-by-one bug reported in #482
+const debouncedSave = debounce(save, 50)
+
+// ✅ Useful — explains a non-obvious constraint that survives naming
 // Backend rejects requests below 50ms apart, so debounce before firing
 const debouncedSave = debounce(save, 50)
 ```
 
-If the comment describes what the code does, delete it and improve the naming instead.
+If the comment describes what the code does, or why the current commit changed it, delete it and improve the naming instead.
 
 ## Forbidden
 
@@ -1736,6 +1742,13 @@ import flag from 'cozy-flags'
 Apply at the very beginning of a task, before writing any code, to land on a fresh branch cut from an up-to-date default branch. Branch naming and commit/PR rules that follow come from `twake-git-conventions`.
 
 ### Steps
+
+0. **Check the working tree matches the task before touching anything.** Run `git status --short` and note the current branch.
+   - If the repo is clean and already on the default branch, skip to step 1.
+   - If there is uncommitted code (staged or not) or the current branch belongs to a different subject than the task about to start, **do not build the new task on top of it**. Commit the pending work as-is on its current branch first (an atomic commit per `twake-git-conventions` — do not stash it away or discard it), then proceed to step 1 for a clean branch.
+   - If the uncommitted code or current branch **is** the same subject as the task (a continuation of the same feature/fix), stay on it and skip step 1-3 — keep working there instead of cutting a new branch.
+
+   This avoids mixing two unrelated features/fixes into the same branch or commit.
 
 1. **Detect the default branch.** Never assume `main`; Twake and upstream Cozy repos are a mix of `main` and `master`. Read it from the remote:
    ```bash
