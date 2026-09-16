@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.0](https://github.com/linagora/twake-guidelines/compare/v0.12.0...v0.13.0) (2026-09-16)
+
+
+### Features
+
+* add guideline on rewriting commits instead of stacking fixups ([9cb1a4e](https://github.com/linagora/twake-guidelines/commit/9cb1a4e5e622d187f1af38041f701a4ff00155ea))
+* **git-conventions:** Add guideline on rewriting commits instead of stacking fixups ([b14365c](https://github.com/linagora/twake-guidelines/commit/b14365c11d8ef384c088f24276e3196b97500c82))
+
 ## [0.12.0](https://github.com/linagora/twake-guidelines/compare/v0.11.0...v0.12.0) (2026-09-15)
 
 
