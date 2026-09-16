@@ -115,7 +115,19 @@ Each skill lives in `skills/<name>/SKILL.md` with YAML frontmatter (`name`, `des
 
 A skill too large for one file can keep supporting material in `skills/<name>/references/`, and link to it with a plain relative path (`references/foo.md`). Only `SKILL.md` is aggregated, so the generator rewrites those paths to raw URLs in `AGENTS.md`, where there is no `skills/` directory to resolve them against.
 
-**After editing any skill, regenerate `AGENTS.md`:**
+### What should go here?
+
+It is generic Twake conventions (git, React, JavaScript/TypeScript, testing)?
+
+It is about using correctly libraries (correct usage of cozy-client, cozy-ui, twake-mui, etc)?
+
+**It goes here.**
+
+It is related to a particular _repository_ (like how to run tests in twake-drive, architecture of twake-drive) .
+
+**It goes in the repository itself.**
+
+### After editing any skill, regenerate `AGENTS.md`
 
 ```bash
 ./scripts/gen-agents.sh
