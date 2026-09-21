@@ -1599,7 +1599,7 @@ ends. A verified App Link is not subject to that gating.
 | 1 | The app | Android intent filter with `autoVerify`, iOS `associated-domains` entitlement | app PR |
 | 2 | The registry storage | your package / appID added to the two `.well-known` files | ops, object storage |
 | 3 | The registry pillar | `trusted_protocols` + `trusted_urls` for the not-installed fallback | salt MR |
-| 4 | The cloudery | the URL in `AUTHORIZED_REDIRECTIONS`, when the link is an OIDC callback | `backend-cozy` MR |
+| 4 | The cloudery | the URL in `AUTHORIZED_REDIRECTIONS`, when the link is an OIDC callback | cloudery backend MR |
 | 5 | Apple Developer portal | Associated Domains on the App ID, profiles regenerated | portal + `match` |
 
 **Deploy server-side first, ship the app last.** 2, 3 and 4 are independent of each
@@ -1689,11 +1689,10 @@ repository actually received a commit** — `match` exits 0 even when the push f
 ### The cloudery must allowlist the URL
 
 When the link is the end of a cloudery login, `oidc_auth` validates
-`redirect_after_oidc` against `AUTHORIZED_REDIRECTIONS`, which lives **once per partner
-controller** in `back/cloudery/backend-cozy` (`linagora_controller.rb`,
-`cnb_controller.rb`). Add the URL to **all** of them, as that repo's `AGENTS.md`
-requires; a missing entry raises `Invalid redirect_after_oidc parameter` before the
-browser ever opens.
+`redirect_after_oidc` against an `AUTHORIZED_REDIRECTIONS` allowlist, duplicated **once
+per partner controller** in the cloudery backend. Add the URL to **every** one of them,
+as that repository's `AGENTS.md` requires; a missing entry raises
+`Invalid redirect_after_oidc parameter` before the browser ever opens.
 
 The check is an **exact string match**. `https://links.twake.app/drive` passes;
 `https://links.twake.app/drive?fallback=…` does not.
