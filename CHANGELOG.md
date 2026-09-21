@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.0](https://github.com/linagora/twake-guidelines/compare/v0.13.0...v0.14.0) (2026-09-21)
+
+
+### Features
+
+* **mobile:** add a universal links skill ([#52](https://github.com/linagora/twake-guidelines/issues/52)) ([d118838](https://github.com/linagora/twake-guidelines/commit/d1188387a179eb5d54f3f040a1fe1e0caa85a07e))
+
 ## [0.13.0](https://github.com/linagora/twake-guidelines/compare/v0.12.0...v0.13.0) (2026-09-16)
 
 
