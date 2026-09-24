@@ -11,8 +11,9 @@ components, do the first and say the others need their own invocation. Never bat
 **Input:** `/migrate-to-twake-mui <ComponentName> [extra guidelines]`.
 Extra guidelines in the prompt override anything below.
 
-**The goal:** the component renders the same as it does in the cozy-ui doc, and every example
-that doc shows exists as a Storybook example. Nothing more.
+**The goal:** the component renders the same as it does in the cozy-ui doc, exposes every prop
+the cozy-ui component accepts, and every example that doc shows exists as a Storybook example.
+Nothing more.
 
 ## Core principle: migrating usually means deleting
 
@@ -78,6 +79,9 @@ Work in a [twake-ui](https://github.com/linagora/twake-ui) checkout, Node 24 (`n
   have (see `MuiChip` `.square`).
 - **cozy-ui is the source of truth; carry over whatever MUI lacks.** When cozy-ui has a size,
   variant, state or default that MUI v9 has no equivalent for, add it and keep going.
+- **The migration is ISO: keep the whole cozy-ui prop API.** List every prop of the cozy-ui
+  component (propTypes and destructured args) and map each one to plain MUI, the theme or the
+  wrapper. A prop no app uses is still migrated: a usage search never justifies dropping one.
 - **Write only the delta.** Before adding any variant, read what MUI already does for that
   component and keep only the declarations that differ from it. The installed source is the
   authority, not memory or the docs:
