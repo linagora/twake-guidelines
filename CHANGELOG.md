@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.14.1](https://github.com/linagora/twake-guidelines/compare/v0.14.0...v0.14.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **migrate-to-twake-mui:** keep every cozy-ui prop when migrating ([e613d0a](https://github.com/linagora/twake-guidelines/commit/e613d0ae4b76d3949dca19a6669c2d8257cc246f))
+* **migrate-to-twake-mui:** Keep every cozy-ui prop when migrating ([4c7c5c7](https://github.com/linagora/twake-guidelines/commit/4c7c5c76316bc2c6c6099b673d8b627c67e70ee0))
+
 ## [0.14.0](https://github.com/linagora/twake-guidelines/compare/v0.13.0...v0.14.0) (2026-09-21)
 
 
