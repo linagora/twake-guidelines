@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.0](https://github.com/linagora/twake-guidelines/compare/v0.15.0...v0.16.0) (2026-10-05)
+
+
+### Features
+
+* **react:** Require PostHog tracking of every user action ([c71c90d](https://github.com/linagora/twake-guidelines/commit/c71c90db5b27e39cea60a6cea3ff81cd20b64f6f))
+
 ## [0.15.0](https://github.com/linagora/twake-guidelines/compare/v0.14.1...v0.15.0) (2026-10-05)
 
 
