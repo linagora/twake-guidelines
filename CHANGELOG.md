@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.0](https://github.com/linagora/twake-guidelines/compare/v0.14.1...v0.15.0) (2026-10-05)
+
+
+### Features
+
+* **react:** Add a skill for Twake React front-end apps ([a87287a](https://github.com/linagora/twake-guidelines/commit/a87287a9984f4ae422167c8a5876ee65aa759650))
+
 ## [0.14.1](https://github.com/linagora/twake-guidelines/compare/v0.14.0...v0.14.1) (2026-09-24)
 
 
