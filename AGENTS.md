@@ -1865,7 +1865,7 @@ work around them silently; if one blocks you, stop and say so.
 | Lint, format | ESLint 10 flat config from `eslint-config-cozy-app` + jsx-a11y, Prettier |
 | i18n | `twake-i18n` |
 | Auth | OIDC, `openid-client` 6, through the shared twake-libs package (§8) |
-| Product analytics | **PostHog** (`posthog-js`), behind an `Analytics` port (§12) |
+| Product analytics | Events sent to the server, which publishes them to **PostHog**; behind an `Analytics` port (§12) |
 | Shared code | `@linagora/twake-utils` and the other packages of [`linagora/twake-libs`](https://github.com/linagora/twake-libs) |
 | Unit and component tests | Jest 30, Testing Library |
 | End-to-end tests | Playwright + axe, in a separate `e2e/` package (§11) |
@@ -2106,10 +2106,12 @@ cd e2e && npm ci && npx playwright install chromium
 ./scripts/start.sh && npx playwright test; ./scripts/stop.sh
 ```
 
-### 12. Product analytics: PostHog, mandatory
+### 12. Product analytics: through the server, mandatory
 
-Every app reports its user actions to PostHog. **Every user action is tracked, with no
-exception: a feature is not done until each of its actions emits an event.**
+Every app reports its user actions. **Every user action is tracked, with no exception: a
+feature is not done until each of its actions emits an event.** The app never talks to
+PostHog: it sends its events to the server, and **the server publishes them to PostHog**.
+No PostHog key, script or host in the browser.
 
 - **What counts as an action**: anything the user triggers. A click or tap on a control,
   a form submission, a keyboard shortcut, a drag and drop, a context-menu choice, opening
@@ -2119,39 +2121,54 @@ exception: a feature is not done until each of its actions emits an event.**
 - **Outcome too**: an action that calls the back end also reports how it ended
   (`<event>_succeeded` / `<event>_failed`, with an error code, never the error message).
 - **One port, one adapter.** `application/` declares an `Analytics` port (`track(event)`,
-  `page(view)`, `identify(userId)`, `reset()`); `adapters/posthog/` implements it with
-  `posthog-js` and is the only place that imports it. An in-memory adapter serves tests
-  and the runs where analytics is off. ESLint bans `posthog-js` everywhere else.
+  `page(view)`, `reset()`); `adapters/analytics/` implements it by sending the events to
+  the server (below). An in-memory adapter serves tests and the runs where analytics is
+  off. No app depends on `posthog-js`; ESLint bans it.
+- **Where the events go.** To the back end of the app, or to the shared Twake analytics
+  endpoint when the app has none of its own. Its URL is read at runtime (`/.env.js`,
+  `window.ANALYTICS_URL`), like the SSO settings (§8); without it the in-memory adapter is
+  wired and nothing leaves the browser. The adapter uses the ky instance of that back end
+  (§4), with the OIDC token of the user (§8).
+- **Wire format.** `POST {ANALYTICS_URL}/events` with
+  `{ app, version, events: [{ name, properties, view?, at }] }`: the app name and version,
+  then each event of the catalogue with its properties, the route pattern for a page
+  view, and the time it happened. Events are batched, sent at most every few seconds and
+  when the page is hidden (`fetch` with `keepalive`).
+- **The server's part.** It authenticates the request, derives the distinct id from the
+  session (a pseudonym of the OIDC `sub`, never a name or an e-mail address), drops the
+  events of a user who did not consent, rejects any event or property outside the
+  published catalogue, and forwards the rest to the Twake PostHog instance, self-hosted in
+  the EU (never PostHog Cloud, never a host outside the EU). The app therefore never calls
+  `identify()`: the identity comes from the session, not from the browser.
 - **Typed catalogue.** Events are a discriminated union in
   `application/analytics/events.ts`: name in `snake_case`, `<object>_<action>` in the past
   tense (`message_sent`, `thread_opened`, `room_search_submitted`), with its typed
   properties. `track()` accepts that union only, so an event that is not in the catalogue
-  does not compile. Every event carries the app name and version.
+  does not compile.
+- **Documented, event by event.** The app publishes what it sends in
+  `docs/analytics.md`: for each event, its name, when it is emitted, each property with
+  its type and its allowed values, and the outcome events. The page also says what is
+  never sent and how consent works. It is the contract the server checks the events
+  against and the document a data protection review reads, so it changes in the same
+  commit as `events.ts`; a test fails when an event of the catalogue is missing from it.
 - **Where the call goes.** In the use case when the action goes through one, otherwise in
   the `ui/` handler, through the `useAnalytics()` hook from the composition root. Never in
   `ds/`: a design-system component exposes its callbacks and the caller tracks.
 - **Fire and forget.** Tracking never blocks, delays or breaks the action: no `await` on
   it, and a failure of the adapter is swallowed and logged.
-- **Identity.** `identify()` with the OIDC `sub` once the session is up, `reset()` on
-  logout. No name and no e-mail address as the distinct id.
 - **Never send content or personal data.** No message, subject, file name, room, contact
   or event title, search query, e-mail address, display name, token or URL carrying one.
-  Properties are ids, counts, enums and booleans. Because of that, PostHog **autocapture
-  is off** (it sends the text of the clicked element), automatic page-view capture is off
-  (the router reports views, with the route pattern and not the resolved URL), and session
-  recording is off.
-- **Consent first.** The app asks the user for consent to analytics, and nothing is sent
-  before they accept: PostHog starts opted out (`opt_out_capturing_by_default`) and is
-  opted in only on acceptance. Refusing is as easy as accepting, the app works the same
-  either way, and the choice can be changed at any time in the settings.
-- **Self-hosted in the EU.** Events go to the Twake PostHog instance, self-hosted in the
-  EU. Never PostHog Cloud, never a host outside the EU.
-- **Runtime configuration.** Project key and host are read at runtime (`/.env.js`,
-  `window.POSTHOG_KEY`, `window.POSTHOG_HOST`), like the SSO settings (§8). Without a key
-  the in-memory adapter is wired and nothing leaves the browser. The host is added to the
-  `connect-src` of the CSP (§10); no PostHog script is loaded from a CDN.
+  Properties are ids, counts, enums and booleans. There is no autocapture and no session
+  recording: only the events of the catalogue leave the browser, and page views carry the
+  route pattern, not the resolved URL.
+- **Consent first.** The app asks the user for consent to analytics, and sends nothing
+  before they accept. Refusing is as easy as accepting, the app works the same either
+  way, and the choice can be changed at any time in the settings. The choice is stored
+  with the user's settings, where the server reads it too.
+- **CSP.** Only the analytics endpoint is added to the `connect-src` of the CSP (§10),
+  usually the back end the app already calls.
 - **Tests.** Each feature spec asserts, on the in-memory adapter, the events its actions
-  emit. The e2e stack (§11) runs without a PostHog key.
+  emit. The e2e stack (§11) runs without `ANALYTICS_URL`.
 
 ### 13. Before committing
 
