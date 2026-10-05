@@ -1,6 +1,6 @@
 ---
 name: twake-react-app
-description: Use when creating, scaffolding, or implementing a Twake front-end application in React (a standalone SPA such as Twake Space, Mail, Chat, Contacts, Calendar, or a new app). Fixes the stack (React 19, twake-mui, TanStack Query or cozy-client depending on the backend, Rsbuild through rsbuild-config-twake-app, React Router, ESLint with a11y), the hexagonal layout, the local design system in @/ds/, twake-i18n with the 7 default languages, mandatory OIDC sign-in, RGAA / EN 301 549 accessibility, and the dockerised stack each app boots to test itself.
+description: Use when creating, scaffolding, or implementing a Twake front-end application in React (a standalone SPA such as Twake Space, Mail, Chat, Contacts, Calendar, or a new app). Fixes the stack (React 19, twake-mui, TanStack Query or cozy-client depending on the backend, Rsbuild through rsbuild-config-twake-app, React Router, ESLint with a11y), the hexagonal layout, the local design system in @/ds/, twake-i18n with the 7 default languages, mandatory OIDC sign-in, RGAA / EN 301 549 accessibility, mandatory PostHog tracking of every user action, and the dockerised stack each app boots to test itself.
 ---
 
 # Twake React application
@@ -47,6 +47,7 @@ work around them silently; if one blocks you, stop and say so.
 | Lint, format | ESLint 10 flat config from `eslint-config-cozy-app` + jsx-a11y, Prettier |
 | i18n | `twake-i18n` |
 | Auth | OIDC, `openid-client` 6, through the shared twake-libs package (§8) |
+| Product analytics | **PostHog** (`posthog-js`), behind an `Analytics` port (§12) |
 | Shared code | `@linagora/twake-utils` and the other packages of [`linagora/twake-libs`](https://github.com/linagora/twake-libs) |
 | Unit and component tests | Jest 30, Testing Library |
 | End-to-end tests | Playwright + axe, in a separate `e2e/` package (§11) |
@@ -283,7 +284,54 @@ cd e2e && npm ci && npx playwright install chromium
 ./scripts/start.sh && npx playwright test; ./scripts/stop.sh
 ```
 
-## 12. Before committing
+## 12. Product analytics: PostHog, mandatory
+
+Every app reports its user actions to PostHog. **Every user action is tracked, with no
+exception: a feature is not done until each of its actions emits an event.**
+
+- **What counts as an action**: anything the user triggers. A click or tap on a control,
+  a form submission, a keyboard shortcut, a drag and drop, a context-menu choice, opening
+  or closing a dialog or a panel, a search, a filter or sort change, a settings change,
+  and every route change (as a page view). A shortcut and a button that do the same thing
+  emit the same event, with an `input` property (`pointer`, `keyboard`, `touch`).
+- **Outcome too**: an action that calls the back end also reports how it ended
+  (`<event>_succeeded` / `<event>_failed`, with an error code, never the error message).
+- **One port, one adapter.** `application/` declares an `Analytics` port (`track(event)`,
+  `page(view)`, `identify(userId)`, `reset()`); `adapters/posthog/` implements it with
+  `posthog-js` and is the only place that imports it. An in-memory adapter serves tests
+  and the runs where analytics is off. ESLint bans `posthog-js` everywhere else.
+- **Typed catalogue.** Events are a discriminated union in
+  `application/analytics/events.ts`: name in `snake_case`, `<object>_<action>` in the past
+  tense (`message_sent`, `thread_opened`, `room_search_submitted`), with its typed
+  properties. `track()` accepts that union only, so an event that is not in the catalogue
+  does not compile. Every event carries the app name and version.
+- **Where the call goes.** In the use case when the action goes through one, otherwise in
+  the `ui/` handler, through the `useAnalytics()` hook from the composition root. Never in
+  `ds/`: a design-system component exposes its callbacks and the caller tracks.
+- **Fire and forget.** Tracking never blocks, delays or breaks the action: no `await` on
+  it, and a failure of the adapter is swallowed and logged.
+- **Identity.** `identify()` with the OIDC `sub` once the session is up, `reset()` on
+  logout. No name and no e-mail address as the distinct id.
+- **Never send content or personal data.** No message, subject, file name, room, contact
+  or event title, search query, e-mail address, display name, token or URL carrying one.
+  Properties are ids, counts, enums and booleans. Because of that, PostHog **autocapture
+  is off** (it sends the text of the clicked element), automatic page-view capture is off
+  (the router reports views, with the route pattern and not the resolved URL), and session
+  recording is off.
+- **Consent first.** The app asks the user for consent to analytics, and nothing is sent
+  before they accept: PostHog starts opted out (`opt_out_capturing_by_default`) and is
+  opted in only on acceptance. Refusing is as easy as accepting, the app works the same
+  either way, and the choice can be changed at any time in the settings.
+- **Self-hosted in the EU.** Events go to the Twake PostHog instance, self-hosted in the
+  EU. Never PostHog Cloud, never a host outside the EU.
+- **Runtime configuration.** Project key and host are read at runtime (`/.env.js`,
+  `window.POSTHOG_KEY`, `window.POSTHOG_HOST`), like the SSO settings (§8). Without a key
+  the in-memory adapter is wired and nothing leaves the browser. The host is added to the
+  `connect-src` of the CSP (§10); no PostHog script is loaded from a CDN.
+- **Tests.** Each feature spec asserts, on the in-memory adapter, the events its actions
+  emit. The e2e stack (§11) runs without a PostHog key.
+
+## 13. Before committing
 
 ```bash
 npm run lint && npm run format:check && npm run typecheck && npm test && npm run build
