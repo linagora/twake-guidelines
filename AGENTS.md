@@ -1859,6 +1859,7 @@ work around them silently; if one blocks you, stop and say so.
 | UI framework | **React 19** |
 | Components | `@linagora/twake-mui` (MUI 9, themed), `@linagora/twake-icons`, `@linagora/twake-css` utility classes |
 | Server state | **TanStack Query 5** for every backend except cozy-stack; **cozy-client** for cozy-stack (§4). No Redux of your own. |
+| HTTP client | **ky**, in the adapters only (§4), with the auth hooks of the shared OIDC package (§8) |
 | Routing | **React Router 8** (needs React ≥ 19.2) |
 | Build | **Rsbuild** via `rsbuild-config-twake-app` (§3) |
 | Lint, format | ESLint 10 flat config from `eslint-config-cozy-app` + jsx-a11y, Prettier |
@@ -1920,7 +1921,9 @@ Dependencies point inwards: `ui` → `application` → `domain`; `adapters` → 
   ports it needs (`SpaceRepository`, `Clock`, `AuthSession`). It imports `domain/` only.
 - **`adapters/`** implement the ports with real protocols (JMAP through
   `jmap-client-ts`, CalDAV, REST, cozy-stack). Protocol types stay here; they are
-  mapped to domain types before leaving the adapter.
+  mapped to domain types before leaving the adapter. HTTP calls that no protocol
+  client makes for you go through **ky**: one instance per backend, created in the
+  adapter, never a raw `fetch`, never axios.
 - **`ui/`** never imports `adapters/`. It calls use cases, which it receives from the
   composition root through a React context. One exception: the cozy-client query
   definitions of `adapters/cozy/queries.ts` (§ below).
@@ -2056,7 +2059,9 @@ separate. Until it is published, copy from Contacts or Calendar and mark the cop
 replacement; never write a new OIDC flow.
 
 The auth service is an adapter behind an `AuthSession` port (`getAuthorizationHeader()`,
-`onUnauthorized()`), consumed by the other adapters.
+`onUnauthorized()`), consumed by the other adapters. Their ky instances get the token
+and the 401 handling from the package's ky hooks (`beforeRequest`, `afterResponse`),
+never from hand-written ones.
 
 ### 9. Integration with Twake Space
 
