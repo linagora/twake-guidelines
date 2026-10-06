@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.0](https://github.com/linagora/twake-guidelines/compare/v0.17.0...v0.18.0) (2026-10-06)
+
+
+### Features
+
+* **git-conventions:** Flag breaking changes in published packages ([edf136e](https://github.com/linagora/twake-guidelines/commit/edf136e22970201c47720fa8fb8efae5bd90dc63))
+
 ## [0.17.0](https://github.com/linagora/twake-guidelines/compare/v0.16.0...v0.17.0) (2026-10-05)
 
 
