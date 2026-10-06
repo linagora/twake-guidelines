@@ -1848,7 +1848,7 @@ work around them silently; if one blocks you, stop and say so.
 | `rsbuild-config-twake-app` is not published yet in `linagora/twake-libs` | No shared Rsbuild config for Twake apps | Plain `@rsbuild/core` meanwhile (§3), then switch. |
 | `eslint-config-cozy-app` 7.1 has no accessibility rules | jsx-a11y is not checked | Add `eslint-plugin-jsx-a11y-x` in the app (§3); an `a11y` export upstream in cozy-libs is the target. |
 | twake-mui ships its own strings in 4 languages only (en, fr, ru, vi) | twake-mui labels fall back to English in de, es, it | Record it in `docs/twake-mui-gaps.md`; the fix belongs in twake-ui. |
-| `e2e` needs a model (Vercel AI Gateway, an API key or a subscription), and how the axe checks run inside it is not settled | The suite cannot run in CI until the model access is decided; axe is not wired | Decide who provides the model access; wire axe in the first app's e2e tests and record how here. Never drop the accessibility check (§7). |
+| The agent steps of `e2e` (`agent.act`, `agent.assert`) call a model on a cache miss (first run, changed screen) | Without a model key they cannot run; plain steps and axe still do | Provide the key as a CI secret (OpenRouter, Vercel AI Gateway: not decided); an agent step skips without it instead of failing. |
 | No shared OIDC package yet in `twake-libs` | Each app copies `oidcAuth.ts` | See §8: the package is to be extracted, not rewritten per app. |
 
 ### 1. Stack
@@ -1868,7 +1868,7 @@ work around them silently; if one blocks you, stop and say so.
 | Product analytics | **PostHog** (`posthog-js`), behind an `Analytics` port (§12) |
 | Shared code | `@linagora/twake-utils` and the other packages of [`linagora/twake-libs`](https://github.com/linagora/twake-libs) |
 | Unit and component tests | Jest 30, Testing Library |
-| End-to-end tests | **`e2e`** ([tester.army/e2e](https://tester.army/e2e)), for every feature, in a separate `e2e/` package (§11) |
+| End-to-end tests | **Tester Army `e2e`** (npm `e2e`, [tester.army/e2e](https://tester.army/e2e)), for every feature, in a separate `e2e/` package (§11) |
 
 Existing apps (Mail, Contacts, Calendar) are on React 18 and React Router 7. New apps
 start on the versions above; the existing ones migrate once twake-mui allows it.
@@ -2092,7 +2092,7 @@ test its own change end to end.
   `e2e/scripts/stop.sh` removes containers, networks and volumes.
 - The app is tested **as its production image** (`E2E_APP_IMAGE=…`), or as a local build
   for quick iterations (`E2E_APP_DIR=…`).
-- **Every feature is tested with `e2e`** ([tester.army/e2e](https://tester.army/e2e)),
+- **Every feature is tested with Tester Army `e2e`** ([tester.army/e2e](https://tester.army/e2e)),
   with no exception: a feature is not done until an `e2e/**/*.e2e.ts` test covers it.
   All end-to-end testing goes through this framework: no separate hand-written
   Playwright suite next to it. A change to a screen or a flow ships with its test in the
