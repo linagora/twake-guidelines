@@ -100,10 +100,13 @@ Work in a [twake-ui](https://github.com/linagora/twake-ui) checkout, Node 24 (`n
   invisible on the other background. Add its counterpart as a second `merge` argument in the same
   commit, and render the dark story before claiming it works. Read the file first: it holds no
   dark-specific block today, so you may be the one introducing it.
-- **Wrapper (only for outcome 3 of the core principle):** `src/components/<Name>/index.tsx`, default + named export,
-  props interface extending the MUI props, `cx` from `classnames` for class merging.
-- **Export:** add to `src/index.ts` under `// COMPONENTS & HELPERS` and its type under `// TYPES`.
-  Skip this if there is no wrapper.
+- **Wrapper (only for outcome 3 of the core principle):** `src/components/<Name>/index.tsx`, default export
+  only (a second named export of the same component is redundant), props interface extending the MUI
+  props, `cx` from `classnames` for class merging. Name a `styled()` root `<Name>Root`, not
+  `Styled<Mui>`.
+- **Export:** add `export { default as <Name> }` to `src/index.ts` under `// COMPONENTS & HELPERS` and
+  its type under `// TYPES`. Export helpers straight from their own file (as `Avatar/helpers` does),
+  never re-exported through the component. Skip this if there is no wrapper.
 
 ## Step 4 — Stories
 
