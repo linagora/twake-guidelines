@@ -41,7 +41,25 @@ BREAKING CHANGE: describe the break and migration path.
 - **When a body is warranted, it explains WHY or HOW — never WHAT.** The code already shows what changed; a body that describes that is redundant. Only add a body to explain the reason the change is needed, or how you got from the symptom to this particular fix, when that reasoning is genuinely non-obvious from the diff.
 - **Do not invent motivation.** If you do not know *why* the change is happening and there is no non-obvious *how* to explain, omit the body rather than manufacturing a rationale or restating the diff.
 - **Wrap body at 72 chars per line**.
-- **Breaking changes** must include a `BREAKING CHANGE:` footer with migration guidance.
+- **Breaking changes** must include a `BREAKING CHANGE:` footer with migration guidance. See below for what counts as one in a published package.
+
+## Breaking changes in published packages
+
+Packages released from their commits (lerna with `conventionalCommits`, as in cozy-libs, or release-please) compute their next version from the commit messages. A breaking change committed without the `BREAKING CHANGE:` footer is published as a minor or patch version, and breaks the apps that upgrade to it.
+
+These changes are breaking for the consumers of a package, even when the diff is one line:
+
+- Raising the minimum of a `peerDependencies` range.
+- Adding a required peer dependency.
+- Removing or renaming an export, a prop or an option.
+- Changing a default value or a behavior that consumers rely on.
+- Raising the minimum Node version in `engines`.
+
+Rules:
+
+- **Say it plainly when reporting**: "this is a breaking change, the package will be published as a major version". Do not leave it to be inferred from the diff.
+- **Put the `BREAKING CHANGE:` footer on the commit that makes the change**, with what consumers must do.
+- **A breaking change already published as a minor or patch cannot be reclassified.** Release a major version with a new commit in the package (a whitespace change is enough, in a file that no linter or formatter rewrites) whose footer is `BREAKING CHANGE:`, citing the PR that introduced the change.
 
 ## Atomic commits: one subject per commit
 
