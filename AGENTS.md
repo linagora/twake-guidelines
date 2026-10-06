@@ -1869,6 +1869,7 @@ work around them silently; if one blocks you, stop and say so.
 | `rsbuild-config-twake-app` is not published yet in `linagora/twake-libs` | No shared Rsbuild config for Twake apps | Plain `@rsbuild/core` meanwhile (§3), then switch. |
 | `eslint-config-cozy-app` 7.1 has no accessibility rules | jsx-a11y is not checked | Add `eslint-plugin-jsx-a11y-x` in the app (§3); an `a11y` export upstream in cozy-libs is the target. |
 | twake-mui ships its own strings in 4 languages only (en, fr, ru, vi) | twake-mui labels fall back to English in de, es, it | Record it in `docs/twake-mui-gaps.md`; the fix belongs in twake-ui. |
+| The agent steps of `e2e` (`agent.act`, `agent.assert`) call a model on a cache miss (first run, changed screen) | Without a model key they cannot run; plain steps and axe still do | Provide the key as a CI secret (OpenRouter, Vercel AI Gateway: not decided); an agent step skips without it instead of failing. |
 | No shared OIDC package yet in `twake-libs` | Each app copies `oidcAuth.ts` | See §8: the package is to be extracted, not rewritten per app. |
 
 ### 1. Stack
@@ -1889,7 +1890,7 @@ work around them silently; if one blocks you, stop and say so.
 | Product analytics | **PostHog** (`posthog-js`), behind an `Analytics` port (§12) |
 | Shared code | `@linagora/twake-utils` and the other packages of [`linagora/twake-libs`](https://github.com/linagora/twake-libs) |
 | Unit and component tests | Jest 30, Testing Library |
-| End-to-end tests | Playwright + axe, in a separate `e2e/` package (§11) |
+| End-to-end tests | **Tester Army `e2e`** (npm `e2e`, [tester.army/e2e](https://tester.army/e2e)), for every feature, in a separate `e2e/` package (§11) |
 
 Existing apps (Mail, Contacts, Calendar) are on React 18 and React Router 7. New apps
 start on the versions above; the existing ones migrate once twake-mui allows it.
@@ -1906,7 +1907,7 @@ start on the versions above; the existing ones migrate once twake-mui allows it.
     ds/              local design system (§5), imported as @/ds/
     locales/         <lang>.json, one per language (§6)
     app/             composition root: builds the adapters, providers, router
-  e2e/               separate npm package (Playwright), with docker/ and scripts/ (§11)
+  e2e/               separate npm package (`e2e` framework), with docker/ and scripts/ (§11)
   docs/twake-mui-gaps.md
   Dockerfile         production image (nginx, runtime config)
   AGENTS.md          app-specific rules, pointing to this skill
@@ -2117,14 +2118,22 @@ test its own change end to end.
   `e2e/scripts/stop.sh` removes containers, networks and volumes.
 - The app is tested **as its production image** (`E2E_APP_IMAGE=…`), or as a local build
   for quick iterations (`E2E_APP_DIR=…`).
-- Playwright: no mock, no stub. Desktop, tablet and phone projects. A CSP violation in
-  the browser console fails the test. Each screen calls `expectNoA11yViolations(page)`.
+- **Every feature is tested with Tester Army `e2e`** ([tester.army/e2e](https://tester.army/e2e)),
+  with no exception: a feature is not done until an `e2e/**/*.e2e.ts` test covers it.
+  All end-to-end testing goes through this framework: no separate hand-written
+  Playwright suite next to it. A change to a screen or a flow ships with its test in the
+  same commit.
+- Write the steps that matter as goals (`agent.act`, `agent.assert`) and the checks that
+  must be exact with locators and deterministic assertions (`expect`). The cached actions
+  are replayed without calling the model.
+- No mock, no stub. Desktop, tablet and phone targets. A CSP violation in the browser
+  console fails the test. Each screen is checked with axe (§7).
 - `data-testid` values are a contract with `e2e/`, listed in `e2e/pages/README.md`.
-- The CI runs the same `start.sh` / `npx playwright test` / `stop.sh` as a developer.
+- The CI runs the same `start.sh` / `npx e2e` / `stop.sh` as a developer.
 
 ```bash
-cd e2e && npm ci && npx playwright install chromium
-./scripts/start.sh && npx playwright test; ./scripts/stop.sh
+cd e2e && npm ci
+./scripts/start.sh && npx e2e; ./scripts/stop.sh
 ```
 
 ### 12. Product analytics: PostHog, mandatory
@@ -2180,7 +2189,7 @@ exception: a feature is not done until each of its actions emits an event.**
 npm run lint && npm run format:check && npm run typecheck && npm test && npm run build
 ```
 
-and, for anything that changes a screen or a flow, the e2e suite of §11.
+and, for anything that changes a screen or a flow, its `e2e` test and the e2e suite of §11.
 
 ---
 
