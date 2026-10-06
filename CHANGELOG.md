@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.1](https://github.com/linagora/twake-guidelines/compare/v0.18.0...v0.18.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* **migrate-to-twake-mui:** Export wrappers as default only ([377fccd](https://github.com/linagora/twake-guidelines/commit/377fccde93f6580b69bf34fb06a313f7072a43ed))
+
 ## [0.18.0](https://github.com/linagora/twake-guidelines/compare/v0.17.0...v0.18.0) (2026-10-06)
 
 
