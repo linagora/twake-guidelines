@@ -53,19 +53,50 @@ itself authorize tag creation.
 
 ## Release notes
 
-Match the established GitHub release format:
+Write a short, grouped changelog in plain developer language. Explain what
+users can do and what was fixed, without implementation details or copied PR
+titles. Match this structure, omitting empty sections:
 
 ```markdown
-## What's Changed
-* <PR title> by @<author> in <PR URL>
+Releasing Twake Drive <version> for beta testing:
+
+## New features
+
+### Shared drives
+
+- You can share a folder inside an already shared folder. ([#123](<PR URL>))
+
+### Files and folders
+
+- You can create a destination folder while moving files. ([#124](<PR URL>))
+
+## Security
+
+- Unsafe links in shortcuts are blocked. ([#125](<PR URL>))
+
+## Bug fixes
+
+- Fixed folders not opening after sharing was removed. ([#126](<PR URL>))
 
 **Full Changelog**: <compare URL>
 ```
 
-Use GitHub's release-note generator to obtain the complete PR and author list,
-then remove `chore` PRs and test/E2E-only PRs. Preserve the remaining PR order.
-Show the filtered result for approval before publishing. Use these comparison
-ranges:
+For stable releases, use "to production" in the opening line. Choose feature
+subsections from the actual changes, such as Shared drives, AI assistant,
+Twake Space, or Languages. Keep descriptions short, combine related changes,
+and end each item with linked PR numbers. Omit author credits, dependency
+versions, internal function names, and build-tool details. Mention conditions
+that affect availability, such as a feature needing to be enabled.
+
+Use GitHub's release-note generator as the source PR list, then inspect PR
+contents where needed. Omit maintenance, tooling, and test/E2E-only changes.
+Keep user-visible fixes and security changes even when their PR title starts
+with `chore` or `test`. Group by topic rather than merge order, and describe
+each change once. Include only changes present in the release target; do not
+copy features from a reference release or include unmerged PRs.
+
+Show the complete notes for approval before publishing a new release. Use
+these comparison ranges:
 
 ```bash
 gh api --method POST repos/linagora/twake-drive/releases/generate-notes \
@@ -78,8 +109,11 @@ gh api --method POST repos/linagora/twake-drive/releases/generate-notes \
 - another beta: previous beta tag to the next beta tag;
 - final stable: previous stable tag to `x.y.z`.
 
-If a `chore`-titled PR contains user-visible fixes, note its removal while
-requesting approval so the user can choose to retain it.
+When asked to amend an existing release's notes, read its current body and
+metadata, then update only the body with `gh release edit <tag> --repo
+linagora/twake-drive --notes-file <notes-file>`. The amendment request
+authorizes this edit. Verify the saved body and that the tag target and
+draft/prerelease flags are unchanged; do not recreate the tag or republish.
 
 ## First beta
 
