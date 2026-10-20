@@ -215,9 +215,13 @@ group of steps. Pause before:
 3. creating a GitHub release or tag;
 4. merging release fixes back into the default branch.
 
-Before a GitHub release, show the exact tag, target commit, prerelease flag, and
-complete release notes. A request to prepare or inspect a release does not by
-itself authorize tag creation.
+Before a GitHub release, print the exact tag, target commit, prerelease flag,
+planned branch/version changes, and complete release notes in a normal
+conversation message. Then ask a short question such as "Publish <tag> with
+these notes?" with **Yes** / **No** options. Keep the notes and detailed plan
+out of the approval prompt. Wait for an explicit answer; No leaves the release
+prepared without publishing. A request to prepare or inspect a release does
+not by itself authorize tag creation.
 
 The CLI bundles branch creation, tag push, GitHub release creation, and an
 optional development-version bump. Obtain approval for the whole selected
