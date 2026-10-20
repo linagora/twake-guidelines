@@ -805,8 +805,9 @@ but calls an external origin will break in production.
 
 ## Release Twake Drive
 
-Release Twake Drive through its `release/<stable-version>` branch and GitHub
-release tags. Support three modes: first beta, another beta, and final stable.
+Use [cozy-app-release](https://github.com/linagora/twake-tools/tree/main/cozy-app-release)
+to publish Twake Drive through its `release/<stable-version>` branch and GitHub
+release tags. Support first beta, another beta, and final stable releases.
 Treat tag creation as an external deployment action.
 
 ### Approval gates
@@ -822,6 +823,11 @@ group of steps. Pause before:
 Before a GitHub release, show the exact tag, target commit, prerelease flag, and
 complete release notes. A request to prepare or inspect a release does not by
 itself authorize tag creation.
+
+The CLI bundles branch creation, tag push, GitHub release creation, and an
+optional development-version bump. Obtain approval for the whole selected
+operation, including the next version or `skip`, before confirming it. Reuse
+approval already given for that exact operation.
 
 ### Preflight for every mode
 
@@ -850,6 +856,36 @@ itself authorize tag creation.
 
    Stop on a failing gate. Report warnings separately from failures. Confirm
    the worktree is still clean after validation.
+
+### Publishing with cozy-app-release
+
+Use Node 24 or later and an authenticated `gh`. Prefer a clean checkout of
+`linagora/twake-tools` synced to its default branch, with dependencies installed
+using `npm ci` in `cozy-app-release/`. The `npx` wrapper can retain an older
+copy in `~/.twake-tools-cache`; a fresh wrapper download does not refresh it.
+
+Save the approved notes outside the app worktree, then run the CLI from the
+app repository in an interactive terminal:
+
+```bash
+node /absolute/path/to/twake-tools/cozy-app-release/bin/cozy-app-release.js \
+  --notes-file /absolute/path/to/approved-release-notes.md
+```
+
+The tool reads the notes before switching branches and publishes them unchanged.
+It does not run the app's validation gates; finish preflight first. Do not
+pre-create a first-beta branch or tag, since the tool creates both.
+
+The CLI updates its detected base branch before showing the menu and offers
+only its latest release branch. Verify the displayed base matches `origin/HEAD`
+and the offered release branch matches the intended target. While at the menu,
+recheck the target branch's commit against the approved, validated commit.
+If it changed, quit and revalidate before publishing. For subsequent betas or
+stable releases, sync the local release branch with its remote beforehand;
+the CLI only checks it out, without pulling it.
+
+If the CLI cannot select the intended branch, quit and use the manual fallback
+below for that approved target. Never select a different release to proceed.
 
 ### Release notes
 
@@ -922,26 +958,17 @@ draft/prerelease flags are unchanged; do not recreate the tag or republish.
 2. Confirm all intended PRs are in the latest `master`. List any current-branch
    commits that are not in `master`; do not assume they should be included.
 3. Confirm that neither `release/x.y.z` nor `x.y.z-beta.1` already exists.
-4. With approval, create `release/x.y.z` at the exact approved `master` commit
-   and push it.
-5. Explain that bumping `master` to the next stable target separates future
-   development, but is not required to publish the beta. Only do it when the
-   user approves.
-6. Validate the release branch and prepare the approved notes.
-7. Create the GitHub release with:
-
-   ```bash
-   gh release create x.y.z-beta.1 \
-     --repo linagora/twake-drive \
-     --target release/x.y.z \
-     --title x.y.z-beta.1 \
-     --prerelease \
-     --notes-file <approved-notes-file>
-   ```
-
-8. Verify the release is not a draft, is marked prerelease, and its tag resolves
+4. Validate the exact `master` commit to release and prepare the approved notes.
+5. Agree on the next development version for `master`, or `skip` to leave it
+   unchanged. The CLI suggests the next minor version but accepts any greater
+   stable version. Bumping separates future development from the release.
+6. Run the CLI with the notes file, select **New beta**, and enter the approved
+   development version or `skip`. It creates and pushes `release/x.y.z` and
+   `x.y.z-beta.1`, publishes the prerelease, then applies any selected bump to
+   `master` with a normal push.
+7. Verify the release is not a draft, is marked prerelease, and its tag resolves
    to the approved commit.
-9. Monitor the tag-triggered `CI/CD` run through completion. Verify install,
+8. Monitor the tag-triggered `CI/CD` run through completion. Verify install,
    lint, test, build, Downcloud upload, registry publication, and Mattermost
    notification. Report the Actions URL and conclusion.
 
@@ -954,10 +981,11 @@ draft/prerelease flags are unchanged; do not recreate the tag or republish.
 3. If a fix exists only on `master`, cherry-pick the approved atomic commit onto
    `release/x.y.z`. If a fix is made on the release branch, plan to carry it back
    to `master` after release.
-4. Validate the updated release branch.
+4. Validate the updated release branch and push any approved fixes. Confirm
+   local and remote release heads match the validated commit.
 5. Generate and approve notes comparing the previous beta with the new beta.
-6. Create the next prerelease using the same command shape as the first beta,
-   replacing the tag and title with `x.y.z-beta.<n+1>`.
+6. Run the CLI with the approved notes, select **Add beta** for the intended
+   release branch, and confirm the exact next beta tag.
 7. Verify the tag target and monitor `CI/CD` publication.
 
 ### Final stable release
@@ -972,22 +1000,29 @@ draft/prerelease flags are unchanged; do not recreate the tag or republish.
 4. Confirm the files still contain stable version `x.y.z` and run all validation
    gates again.
 5. Generate and approve full release notes from the previous stable tag.
-6. Create the stable GitHub release without `--prerelease`:
-
-   ```bash
-   gh release create x.y.z \
-     --repo linagora/twake-drive \
-     --target <tested-beta-commit> \
-     --title x.y.z \
-     --notes-file <approved-notes-file>
-   ```
+6. Confirm the local and remote release branch heads both equal the tested beta
+   commit. Run the CLI with the approved notes, select **Final release** for
+   that branch, and confirm the stable version. It publishes without the
+   prerelease flag.
 
 7. Verify the stable tag, release metadata, and `CI/CD` publication.
 8. With approval, merge all release-branch fixes back into `master`. Do not
    delete the release branch until this is complete.
 
+### Manual fallback
+
+For an approved target the CLI cannot select, create and push the release
+branch if this is a first beta, then use `gh release create <tag> --repo
+linagora/twake-drive --target <approved-commit> --title <tag> --notes-file
+<approved-notes-file>`, adding `--prerelease` for betas only. Apply the same
+validation, approval, tag verification, and CI monitoring as the CLI path.
+Do not bypass a failed validation gate or failed CLI operation with this path.
+
 ### Failure handling
 
+- If the CLI fails, inspect remote tags, the GitHub release, and Actions before
+  retrying. A development-version push can fail after the beta was already
+  published; complete only the missing bump rather than creating another tag.
 - If validation or CI fails before publication, fix the release branch and use
   a new beta number. Never rewrite a published beta tag.
 - If the Publish step fails, inspect Actions logs and determine whether the
