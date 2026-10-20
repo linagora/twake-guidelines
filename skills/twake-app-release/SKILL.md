@@ -1,14 +1,16 @@
 ---
-name: twake-drive-release
-description: Prepare and publish linagora/twake-drive releases with the cozy-app-release CLI and its tag-driven GitHub Actions workflow. Use for first or subsequent betas, stable promotion, release notes, and monitoring registry publication.
+name: twake-app-release
+description: Prepare and publish Cozy/Twake web app releases, including Drive, Home, and Notes, with cozy-app-release and tag-driven cozy-app-publish workflows. Use for first or subsequent betas, stable promotion, release notes, and monitoring registry publication. Excludes libraries, mobile apps, and cozy-stack.
 ---
 
-# Release Twake Drive
+# Release a Cozy/Twake App
 
 Use [cozy-app-release](https://github.com/linagora/twake-tools/tree/main/cozy-app-release)
-to publish Twake Drive through its `release/<stable-version>` branch and GitHub
-release tags. Support first beta, another beta, and final stable releases.
-Treat tag creation as an external deployment action.
+to publish compatible Cozy/Twake web apps through `release/<stable-version>`
+branches and GitHub release tags. Drive, Home, and Notes use this workflow;
+verify compatibility for each selected repository before publishing. Support
+first beta, another beta, and final stable releases. Treat tag creation as an
+external deployment action.
 
 ## Approval gates
 
@@ -18,7 +20,7 @@ group of steps. Pause before:
 1. creating or pushing a release branch;
 2. cherry-picking or committing a release fix;
 3. creating a GitHub release or tag;
-4. merging release fixes back into `master`.
+4. merging release fixes back into the default branch.
 
 Before a GitHub release, show the exact tag, target commit, prerelease flag, and
 complete release notes. A request to prepare or inspect a release does not by
@@ -31,35 +33,35 @@ approval already given for that exact operation.
 
 ## Preflight for every mode
 
-1. Confirm the checkout is `linagora/twake-drive` and read, rather than assume:
-   - the default branch from `origin/HEAD`;
-   - `package.json` and `manifest.webapp` versions;
-   - `.nvmrc` and the `packageManager` field;
-   - `.github/workflows/ci-cd.yml` tag filters and publish command.
-2. Require a clean worktree. Sync the relevant branch with its remote using a
-   fast-forward-only pull.
-3. Fetch current remote branch, tag, release, PR, and Actions state. Do not rely
-   on stale local refs.
-4. Require `package.json` and `manifest.webapp` to contain the same stable
-   `x.y.z` version. Never put `-beta.n` in either file.
-5. Use tags without a `v` prefix:
-   - beta: `x.y.z-beta.n`;
-   - stable: `x.y.z`.
-6. Use the repository-pinned Yarn through Corepack. Run the CI gates in order:
-
-   ```bash
-   corepack yarn install --immutable
-   corepack yarn lint
-   corepack yarn test
-   corepack yarn build
-   ```
-
-   Stop on a failing gate. Report warnings separately from failures. Confirm
-   the worktree is still clean after validation.
+1. Identify the selected app from the user's request and the checkout's Git
+   remote. Record `<owner/repo>`, the app name, registry slug from
+   `manifest.webapp`, and default branch from GitHub repository metadata
+   (check `origin/HEAD` agrees). Use these values throughout; do not infer the
+   repository from the local directory name or reuse another app's slug.
+2. Read the app's local release instructions, `package.json`, `manifest.webapp`,
+   Node and package-manager configuration, lockfile, and publishing workflows
+   under `.github/workflows/`. Follow reusable workflows at their pinned ref
+   and inspect the publish script and configured pre/post-publish hooks.
+3. Verify this workflow fits: both version files contain the same stable
+   `x.y.z`, releases use `release/x.y.z`, and tag filters publish `x.y.z-beta.n`
+   and `x.y.z` through `cozy-app-publish`. Tags have no `v` prefix; never put
+   `-beta.n` in either version file. Check recent release history as well.
+   If the app uses a different scheme or publisher, explain the mismatch and
+   follow its documented release process; do not force this CLI onto it.
+4. Require a clean worktree. Fetch current remote branch, tag, release, PR, and
+   Actions state, then sync the relevant branch with a fast-forward-only pull.
+5. Use the app's configured Node and package-manager versions to run its CI
+   validation commands in order, including any app-specific checks. Derive
+   these from the scripts and workflows rather than copying Drive's commands.
+   For example, Yarn Classic uses `yarn install --frozen-lockfile`, while
+   modern Yarn uses `yarn install --immutable`; use Corepack when configured.
+   Stop on a failing gate, report warnings separately, and confirm the worktree
+   is still clean. Keep local validation separate from CI's publish command.
 
 ## Publishing with cozy-app-release
 
-Use Node 24 or later and an authenticated `gh`. Prefer a clean checkout of
+Run the release tool with Node 24 or later and an authenticated `gh`; the app
+may require a different Node version for validation. Prefer a clean checkout of
 `linagora/twake-tools` synced to its default branch, with dependencies installed
 using `npm ci` in `cozy-app-release/`. The `npx` wrapper can retain an older
 copy in `~/.twake-tools-cache`; a fresh wrapper download does not refresh it.
@@ -94,25 +96,21 @@ users can do and what was fixed, without implementation details or copied PR
 titles. Match this structure, omitting empty sections:
 
 ```markdown
-Releasing Twake Drive <version> for beta testing:
+Releasing <app name> <version> for beta testing:
 
 ## New features
 
-### Shared drives
+### <Feature area>
 
-- You can share a folder inside an already shared folder. ([#123](<PR URL>))
-
-### Files and folders
-
-- You can create a destination folder while moving files. ([#124](<PR URL>))
+- <What the user can now do>. ([#123](<PR URL>))
 
 ## Security
 
-- Unsafe links in shortcuts are blocked. ([#125](<PR URL>))
+- <What is now protected>. ([#124](<PR URL>))
 
 ## Bug fixes
 
-- Fixed folders not opening after sharing was removed. ([#126](<PR URL>))
+- Fixed <problem and when it happened>. ([#125](<PR URL>))
 
 **Full Changelog**: <compare URL>
 ```
@@ -135,7 +133,7 @@ Show the complete notes for approval before publishing a new release. Use
 these comparison ranges:
 
 ```bash
-gh api --method POST repos/linagora/twake-drive/releases/generate-notes \
+gh api --method POST repos/<owner/repo>/releases/generate-notes \
   -f tag_name=<new-tag> \
   -f target_commitish=<release-branch-or-commit> \
   -f previous_tag_name=<comparison-start-tag>
@@ -147,7 +145,7 @@ gh api --method POST repos/linagora/twake-drive/releases/generate-notes \
 
 When asked to amend an existing release's notes, read its current body and
 metadata, then update only the body with `gh release edit <tag> --repo
-linagora/twake-drive --notes-file <notes-file>`. The amendment request
+<owner/repo> --notes-file <notes-file>`. The amendment request
 authorizes this edit. Verify the saved body and that the tag target and
 draft/prerelease flags are unchanged; do not recreate the tag or republish.
 
@@ -155,21 +153,23 @@ draft/prerelease flags are unchanged; do not recreate the tag or republish.
 
 1. Determine the target stable version with SemVer: patch for fixes, minor for
    features, and at least minor for permission changes.
-2. Confirm all intended PRs are in the latest `master`. List any current-branch
-   commits that are not in `master`; do not assume they should be included.
+2. Confirm all intended PRs are in the latest default branch. List any commits
+   on the current branch that are absent from it; do not assume they belong.
 3. Confirm that neither `release/x.y.z` nor `x.y.z-beta.1` already exists.
-4. Validate the exact `master` commit to release and prepare the approved notes.
-5. Agree on the next development version for `master`, or `skip` to leave it
-   unchanged. The CLI suggests the next minor version but accepts any greater
-   stable version. Bumping separates future development from the release.
+4. Validate the exact default branch commit to release and prepare the approved
+   notes.
+5. Agree on the next development version for the default branch, or `skip` to
+   leave it unchanged. The CLI suggests the next minor version but accepts any
+   greater stable version. Bumping separates future development from the release.
 6. Run the CLI with the notes file, select **New beta**, and enter the approved
    development version or `skip`. It creates and pushes `release/x.y.z` and
    `x.y.z-beta.1`, publishes the prerelease, then applies any selected bump to
-   `master` with a normal push.
+   the default branch with a normal push.
 7. Verify the release is not a draft, is marked prerelease, and its tag resolves
    to the approved commit.
-8. Monitor the tag-triggered `CI/CD` run through completion. Verify install,
-   lint, test, build, Downcloud upload, registry publication, and Mattermost
+8. Monitor the app's tag-triggered publishing workflow through completion.
+   Verify its validation gates, registry publication for the selected slug and
+   version, and configured hooks such as Downcloud upload or Mattermost
    notification. Report the Actions URL and conclusion.
 
 ## Another beta
@@ -178,15 +178,15 @@ draft/prerelease flags are unchanged; do not recreate the tag or republish.
    remote tag. The next beta must be `n + 1`; never move or reuse a tag.
 2. Confirm which fixes belong in the beta. Release-branch commits must be bug
    fixes only.
-3. If a fix exists only on `master`, cherry-pick the approved atomic commit onto
-   `release/x.y.z`. If a fix is made on the release branch, plan to carry it back
-   to `master` after release.
+3. If a fix exists only on the default branch, cherry-pick the approved atomic
+   commit onto `release/x.y.z`. If a fix is made on the release branch, plan to
+   carry it back to the default branch after release.
 4. Validate the updated release branch and push any approved fixes. Confirm
    local and remote release heads match the validated commit.
 5. Generate and approve notes comparing the previous beta with the new beta.
 6. Run the CLI with the approved notes, select **Add beta** for the intended
    release branch, and confirm the exact next beta tag.
-7. Verify the tag target and monitor `CI/CD` publication.
+7. Verify the tag target and monitor the app's publishing workflow.
 
 ## Final stable release
 
@@ -204,16 +204,15 @@ draft/prerelease flags are unchanged; do not recreate the tag or republish.
    commit. Run the CLI with the approved notes, select **Final release** for
    that branch, and confirm the stable version. It publishes without the
    prerelease flag.
-
-7. Verify the stable tag, release metadata, and `CI/CD` publication.
-8. With approval, merge all release-branch fixes back into `master`. Do not
-   delete the release branch until this is complete.
+7. Verify the stable tag, release metadata, and the app's registry publication.
+8. With approval, merge all release-branch fixes back into the default branch.
+   Do not delete the release branch until this is complete.
 
 ## Manual fallback
 
 For an approved target the CLI cannot select, create and push the release
 branch if this is a first beta, then use `gh release create <tag> --repo
-linagora/twake-drive --target <approved-commit> --title <tag> --notes-file
+<owner/repo> --target <approved-commit> --title <tag> --notes-file
 <approved-notes-file>`, adding `--prerelease` for betas only. Apply the same
 validation, approval, tag verification, and CI monitoring as the CLI path.
 Do not bypass a failed validation gate or failed CLI operation with this path.
