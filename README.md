@@ -104,6 +104,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `twake-react-app` | Twake React front-end apps | React 19, twake-mui only (local `@/ds/` for gaps), TanStack Query or cozy-client by backend, Rsbuild, React Router, hexagonal layout, twake-i18n in 7 languages, mandatory OIDC, RGAA / EN 301 549, dockerised self-testing stack |
 | `twake-app-integrations` | Apps that need another app | Apps never know each other: cozy-stack intents through cozy-interapp (and twake-sdk outside the stack) when another app acts for the user, manifest declaration, handler page, caller; RabbitMQ to sync data |
 | `twake-bender-scripts` | Bender instance administration | Agent never calls the Bender API nor sees a token: writes curl scripts (app updates, source changes, context and instance flags) the user runs and pastes back |
+| `twake-figma-mockups` | Figma mockups | Library Twake instances only, colours and spacing bound to its variables, its text styles and icons, an audit before handing over |
 
 ### Planned
 
@@ -179,6 +180,7 @@ twake-guidelines/
 │   └── twake-app-integrations/SKILL.md
 │   └── migrate-to-twake-mui/SKILL.md
 │   └── twake-bender-scripts/SKILL.md
+│   └── twake-figma-mockups/SKILL.md
 ├── AGENTS.md                   # Generated aggregate for OpenCode / other AGENTS.md consumers
 ├── scripts/
 │   └── gen-agents.sh           # Regenerates AGENTS.md from skills/
