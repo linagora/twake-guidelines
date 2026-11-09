@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.19.0](https://github.com/linagora/twake-guidelines/compare/v0.18.1...v0.19.0) (2026-11-09)
+
+
+### Features
+
+* **react:** Require a deterministic Playwright test for every feature ([ef70674](https://github.com/linagora/twake-guidelines/commit/ef7067473f6113a234fd2328d643ca13132152b3))
+* **react:** require a Playwright test for every feature ([662981a](https://github.com/linagora/twake-guidelines/commit/662981a0254d7b6aff3fccbb03fb5b3cb2e70a77))
+
 ## [0.18.1](https://github.com/linagora/twake-guidelines/compare/v0.18.0...v0.18.1) (2026-10-06)
 
 
