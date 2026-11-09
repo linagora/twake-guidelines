@@ -1889,7 +1889,7 @@ work around them silently; if one blocks you, stop and say so.
 | Product analytics | **PostHog** (`posthog-js`), behind an `Analytics` port (§12) |
 | Shared code | `@linagora/twake-utils` and the other packages of [`linagora/twake-libs`](https://github.com/linagora/twake-libs) |
 | Unit and component tests | Jest 30, Testing Library |
-| End-to-end tests | Playwright + axe, in a separate `e2e/` package (§11) |
+| End-to-end tests | Playwright + axe, for every feature, in a separate `e2e/` package (§11) |
 
 Existing apps (Mail, Contacts, Calendar) are on React 18 and React Router 7. New apps
 start on the versions above; the existing ones migrate once twake-mui allows it.
@@ -2117,10 +2117,18 @@ test its own change end to end.
   `e2e/scripts/stop.sh` removes containers, networks and volumes.
 - The app is tested **as its production image** (`E2E_APP_IMAGE=…`), or as a local build
   for quick iterations (`E2E_APP_DIR=…`).
+- **Every feature has a Playwright test**, with no exception: a feature is not done
+  until a test of `e2e/` covers it. A change to a screen or a flow ships with its test
+  in the same commit.
+- The tests are deterministic: locators and exact assertions, no step resolved by a
+  model.
 - Playwright: no mock, no stub. Desktop, tablet and phone projects. A CSP violation in
   the browser console fails the test. Each screen calls `expectNoA11yViolations(page)`.
 - `data-testid` values are a contract with `e2e/`, listed in `e2e/pages/README.md`.
 - The CI runs the same `start.sh` / `npx playwright test` / `stop.sh` as a developer.
+- An agent framework such as Tester Army `e2e` ([tester.army/e2e](https://tester.army/e2e))
+  may run a QA session every night next to the suite. It replaces no Playwright test
+  and gates no merge.
 
 ```bash
 cd e2e && npm ci && npx playwright install chromium
@@ -2180,7 +2188,7 @@ exception: a feature is not done until each of its actions emits an event.**
 npm run lint && npm run format:check && npm run typecheck && npm test && npm run build
 ```
 
-and, for anything that changes a screen or a flow, the e2e suite of §11.
+and, for anything that changes a screen or a flow, its Playwright test and the e2e suite of §11.
 
 ---
 
