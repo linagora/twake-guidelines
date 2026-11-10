@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.20.0](https://github.com/linagora/twake-guidelines/compare/v0.19.0...v0.20.0) (2026-11-10)
+
+
+### Features
+
+* **app-integrations:** add a skill for integrating twake apps ([#71](https://github.com/linagora/twake-guidelines/issues/71)) ([efbf8da](https://github.com/linagora/twake-guidelines/commit/efbf8da12e421bc60e970dcc978dceb8277fb964))
+
 ## [0.19.0](https://github.com/linagora/twake-guidelines/compare/v0.18.1...v0.19.0) (2026-11-09)
 
 
