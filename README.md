@@ -102,6 +102,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `migrate-to-twake-mui` | cozy-ui to twake-mui migration | One component per PR: move MUI v4 overloads to v9 theme overrides, port the cozy-ui doc examples to Storybook and Argos stories, same render |
 | `twake-create-app` | New Cozy-web app | Decide pure cozy app vs coquille (external backend) by where the backend lives, scaffold from cozy-app-template, wire mandatory Sentry (DSN + release), set up registry publish CI (cozy-app-publish, REGISTRY_TOKEN, tag-driven channels), watch prod CSP |
 | `twake-react-app` | Twake React front-end apps | React 19, twake-mui only (local `@/ds/` for gaps), TanStack Query or cozy-client by backend, Rsbuild, React Router, hexagonal layout, twake-i18n in 7 languages, mandatory OIDC, RGAA / EN 301 549, dockerised self-testing stack |
+| `twake-app-integrations` | Apps that need another app | Apps never know each other: cozy-stack intents through cozy-interapp (and twake-sdk outside the stack) when another app acts for the user, manifest declaration, handler page, caller; RabbitMQ to sync data |
 
 ### Planned
 
@@ -109,6 +110,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 - `java-conventions` — Spring / Quarkus patterns
 - `go-conventions` — project layout, error handling
 - `ci-deployment` — Travis / GitHub Actions, feature flags
+- `rabbitmq-messages`: syncing data between apps over RabbitMQ (exchanges, message format, naming)
 
 ## Contributing
 
@@ -173,6 +175,7 @@ twake-guidelines/
 │   └── twake-package-manager-audit/SKILL.md
 │   └── twake-create-app/SKILL.md
 │   └── twake-react-app/SKILL.md
+│   └── twake-app-integrations/SKILL.md
 │   └── migrate-to-twake-mui/SKILL.md
 ├── AGENTS.md                   # Generated aggregate for OpenCode / other AGENTS.md consumers
 ├── scripts/
