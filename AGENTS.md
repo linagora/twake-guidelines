@@ -228,6 +228,13 @@ optional development-version bump. Obtain approval for the whole selected
 operation, including the next version or `skip`, before confirming it. Reuse
 approval already given for that exact operation.
 
+### Choosing the mode
+
+When the request does not name the version, such as "new beta", look at the
+highest `release/x.y.z` branch. If `x.y.z` has no stable tag yet, ask whether
+to add a beta to it or start the first beta of the default branch's version.
+The CLI's "new beta" always means a first beta on a new release branch.
+
 ### Preflight for every mode
 
 1. Identify the selected app from the user's request and the checkout's Git
@@ -260,31 +267,36 @@ approval already given for that exact operation.
 Run the release tool with Node 24 or later and an authenticated `gh`; the app
 may require a different Node version for validation. Prefer a clean checkout of
 `linagora/twake-tools` synced to its default branch, with dependencies installed
-using `npm ci` in `cozy-app-release/`. The `npx` wrapper can retain an older
-copy in `~/.twake-tools-cache`; a fresh wrapper download does not refresh it.
+using `npm ci` in `cozy-app-release/`; the flags below need
+linagora/twake-tools#7. The `npx` wrapper can retain an older copy in
+`~/.twake-tools-cache`; a fresh wrapper download does not refresh it.
 
-Save the approved notes outside the app worktree, then run the CLI from the
-app repository in an interactive terminal:
+Save the approved notes outside the app worktree, then run the CLI yourself
+from the app repository. Its flags answer every prompt, so it needs no
+interactive terminal:
 
 ```bash
-node /absolute/path/to/twake-tools/cozy-app-release/bin/cozy-app-release.js \
-  --notes-file /absolute/path/to/approved-release-notes.md
+CLI=/absolute/path/to/twake-tools/cozy-app-release/bin/cozy-app-release.js
+NOTES=/absolute/path/to/approved-release-notes.md
+node "$CLI" --notes-file "$NOTES" --action new-beta --next-version <x.y.z|skip>
+node "$CLI" --notes-file "$NOTES" --action add-beta --yes
+node "$CLI" --notes-file "$NOTES" --action final-release --yes
 ```
 
 The tool reads the notes before switching branches and publishes them unchanged.
 It does not run the app's validation gates; finish preflight first. Do not
 pre-create a first-beta branch or tag, since the tool creates both.
 
-The CLI updates its detected base branch before showing the menu and offers
-only its latest release branch. Verify the displayed base matches `origin/HEAD`
-and the offered release branch matches the intended target. While at the menu,
-recheck the target branch's commit against the approved, validated commit.
-If it changed, quit and revalidate before publishing. For subsequent betas or
-stable releases, sync the local release branch with its remote beforehand;
-the CLI only checks it out, without pulling it.
+The CLI fast-forwards its detected base branch, then works on it (new beta) or
+on the highest `release/x.y.z` branch (add beta, final release). It tags the
+local branch without pulling it. Right before running it, check that the base
+matches `origin/HEAD`, the highest release branch is the intended target, and
+the local and remote heads of the target both equal the approved, validated
+commit. If the base moved, revalidate before publishing.
 
-If the CLI cannot select the intended branch, quit and use the manual fallback
-below for that approved target. Never select a different release to proceed.
+If the CLI would work on a different branch than the approved target, use the
+manual fallback below for that target. Never publish a different release to
+proceed.
 
 ### Release notes
 
@@ -358,10 +370,10 @@ draft/prerelease flags are unchanged; do not recreate the tag or republish.
 5. Agree on the next development version for the default branch, or `skip` to
    leave it unchanged. The CLI suggests the next minor version but accepts any
    greater stable version. Bumping separates future development from the release.
-6. Run the CLI with the notes file, select **New beta**, and enter the approved
-   development version or `skip`. It creates and pushes `release/x.y.z` and
-   `x.y.z-beta.1`, publishes the prerelease, then applies any selected bump to
-   the default branch with a normal push.
+6. Run the CLI with the notes file, `--action new-beta`, and `--next-version`
+   set to the approved development version or `skip`. It creates and pushes
+   `release/x.y.z` and `x.y.z-beta.1`, publishes the prerelease, then applies
+   any selected bump to the default branch with a normal push.
 7. Verify the release is not a draft, is marked prerelease, and its tag resolves
    to the approved commit.
 8. Monitor the app's tag-triggered publishing workflow through completion.
@@ -374,16 +386,36 @@ draft/prerelease flags are unchanged; do not recreate the tag or republish.
 1. Sync `release/x.y.z` and identify the greatest existing `x.y.z-beta.n`
    remote tag. The next beta must be `n + 1`; never move or reuse a tag.
 2. Confirm which fixes belong in the beta. Release-branch commits must be bug
-   fixes only.
+   fixes only, unless the user wants the whole default branch (see Refreshing
+   a release branch from the default branch).
 3. If a fix exists only on the default branch, cherry-pick the approved atomic
    commit onto `release/x.y.z`. If a fix is made on the release branch, plan to
    carry it back to the default branch after release.
 4. Validate the updated release branch and push any approved fixes. Confirm
    local and remote release heads match the validated commit.
 5. Generate and approve notes comparing the previous beta with the new beta.
-6. Run the CLI with the approved notes, select **Add beta** for the intended
-   release branch, and confirm the exact next beta tag.
+6. Run the CLI with the approved notes and `--action add-beta --yes`, and check
+   that its output names the expected next beta tag.
 7. Verify the tag target and monitor the app's publishing workflow.
+
+### Refreshing a release branch from the default branch
+
+Use this when the next beta of `x.y.z` should contain everything on the default
+branch, not only selected fixes. It applies only while `x.y.z` has no stable
+tag.
+
+1. Check that the default branch contains the release branch head
+   (`git merge-base --is-ancestor`). If it does not, stop: some release-branch
+   fixes are missing from the default branch.
+2. Fast-forward the local release branch to the default branch head.
+3. The default branch already carries the next development version, and
+   `cozy-app-publish` refuses a tag that differs from `package.json`. Add one
+   commit that sets both version files back to `x.y.z`, usually by reverting
+   the development-version bump, and say in its message that it must never
+   be merged back into the default branch.
+4. Continue with Another beta from step 4: validate, push the branch, approve
+   notes from the previous beta, and run `--action add-beta --yes`.
+5. When merging release fixes back later, leave out the version commit.
 
 ### Final stable release
 
@@ -398,9 +430,9 @@ draft/prerelease flags are unchanged; do not recreate the tag or republish.
    gates again.
 5. Generate and approve full release notes from the previous stable tag.
 6. Confirm the local and remote release branch heads both equal the tested beta
-   commit. Run the CLI with the approved notes, select **Final release** for
-   that branch, and confirm the stable version. It publishes without the
-   prerelease flag.
+   commit. Run the CLI with the approved notes and `--action final-release
+   --yes`, and check that its output names the stable version. It publishes
+   without the prerelease flag.
 7. Verify the stable tag, release metadata, and the app's registry publication.
 8. With approval, merge all release-branch fixes back into the default branch.
    Do not delete the release branch until this is complete.
