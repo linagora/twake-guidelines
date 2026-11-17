@@ -2542,10 +2542,10 @@ Twake / Cozy React projects use two in-house component libraries. **Never import
 
 | Library | Based on | Status | Role |
 |---|---|---|---|
-| [`twake-mui`](https://github.com/linagora/twake-ui) | MUI **v7** | Modern, early stage (limited catalogue) | **First choice** — use whenever the component you need exists here |
+| [`twake-mui`](https://github.com/linagora/twake-ui) | MUI **v9** | Modern, early stage (limited catalogue) | **First choice** — use whenever the component you need exists here |
 | [`cozy-ui`](https://github.com/cozy/cozy-ui) | MUI **v4** | Mature, outdated, very complete | **Fallback** when `twake-mui` does not yet provide the component or variant |
 
-This order reflects the soft migration toward MUI v7: reach for `twake-mui` first, and only drop back to `cozy-ui` when `twake-mui` is missing what you need.
+This order reflects the soft migration toward MUI v9: reach for `twake-mui` first, and only drop back to `cozy-ui` when `twake-mui` is missing what you need.
 
 #### When neither library has what you need
 
