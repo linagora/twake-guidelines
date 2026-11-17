@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.22.0](https://github.com/linagora/twake-guidelines/compare/v0.21.0...v0.22.0) (2026-11-17)
+
+
+### Features
+
+* **react:** Send analytics through the server, and document every event ([ff67892](https://github.com/linagora/twake-guidelines/commit/ff67892e0568b334358e63499242ddfac346b4c5))
+
 ## [0.21.0](https://github.com/linagora/twake-guidelines/compare/v0.20.0...v0.21.0) (2026-11-17)
 
 
