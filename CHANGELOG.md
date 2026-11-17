@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.21.0](https://github.com/linagora/twake-guidelines/compare/v0.20.0...v0.21.0) (2026-11-17)
+
+
+### Features
+
+* **bender-scripts:** Add skill for Bender scripts run by the user ([51f5964](https://github.com/linagora/twake-guidelines/commit/51f59646786e719fd817bb9f8b24001ff7766dbb))
+* **figma-mockups:** Add Twake Figma mockups skill ([27effbd](https://github.com/linagora/twake-guidelines/commit/27effbdd133ec00f77041679376ca436706d47f9))
+
 ## [0.20.0](https://github.com/linagora/twake-guidelines/compare/v0.19.0...v0.20.0) (2026-11-10)
 
 
