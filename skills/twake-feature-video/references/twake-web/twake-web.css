@@ -1,0 +1,657 @@
+/* Twake Chat (twake-space-chat), light scheme. Tokens from src/app/theme.ts
+   and ds/MessageBubble: Inter, primary #006bd8, primary.dark #0157ad,
+   secondary text #5d5e61, 16px bubbles, 12px buttons. */
+
+.tc {
+  --tc-primary: #006bd8;
+  --tc-primary-dark: #0157ad;
+  --tc-ink: #1b1c1e;
+  --tc-ink-2: #5d5e61;
+  --tc-ink-3: #8c8d90;
+  --tc-line: #e7e8ea;
+  --tc-soft: #f2f3f5;
+  --tc-mine: color-mix(in srgb, #006bd8 12%, #ffffff);
+  --tc-selected: color-mix(in srgb, #006bd8 8%, #ffffff);
+  font-family: 'TC Inter', Inter, -apple-system, system-ui, sans-serif;
+}
+
+.tc .ss-stage {
+  overflow: hidden;
+  background: var(--ss-well);
+}
+
+.tc-grow {
+  flex: 1;
+}
+
+.tc-i {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ---- Window ---- */
+
+.tc-win {
+  position: absolute;
+  left: 40px;
+  top: 40px;
+  width: 1080px;
+  height: 460px;
+  background: #fff;
+  box-shadow: var(--ss-shadow-hero);
+}
+
+.tc-win .ss-window__bar {
+  background: #fff;
+  border-bottom: 1px solid var(--tc-line);
+}
+
+.tc-win .ss-window__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+}
+
+.tc-app {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  color: var(--tc-ink);
+}
+
+.tc-appbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 48px;
+  padding: 0 14px 0 18px;
+  border-bottom: 1px solid var(--tc-line);
+  flex-shrink: 0;
+}
+
+.tc-logo {
+  display: block;
+  height: 21px;
+  width: auto;
+}
+
+.tc-appbar .tc-face {
+  margin-left: 6px;
+}
+
+.tc-iconbtn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  color: var(--tc-ink-2);
+}
+
+.tc-iconbtn--primary {
+  color: var(--tc-primary);
+}
+
+.tc-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- Faces: twake-mui's initials avatars, a soft gradient each ---- */
+
+.tc-face {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 600;
+  will-change: transform;
+  letter-spacing: 0.01em;
+  background: linear-gradient(140deg, var(--a), var(--b));
+}
+
+.tc-face[data-who='ds'] { --a: #b5d96b; --b: #6fbf4a; }
+.tc-face[data-who='el'] { --a: #6fd3a0; --b: #2ea36f; }
+.tc-face[data-who='np'] { --a: #8fc4ff; --b: #4a8ef0; }
+.tc-face[data-who='lm'] { --a: #7fdccb; --b: #2fae9d; }
+.tc-face[data-who='do'] { --a: #a8dc7a; --b: #5cb85a; }
+.tc-face[data-who='ev'] { --a: #ffc48a; --b: #f08f45; }
+.tc-face[data-who='ma'] { --a: #93b8ff; --b: #5b7ff0; }
+.tc-face[data-who='sc'] { --a: #e7a2f0; --b: #b06ae0; }
+
+/* ---- Room list ---- */
+
+.tc-list {
+  display: flex;
+  flex-direction: column;
+  width: 290px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--tc-line);
+  background: #fff;
+}
+
+.tc-list__head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 52px;
+  padding: 0 10px 0 16px;
+}
+
+.tc-list__title {
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.tc-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin: 0 16px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--tc-soft);
+  color: var(--tc-ink-3);
+  font-size: 13.5px;
+}
+
+.tc-chips {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px 8px;
+}
+
+.tc-chip {
+  padding: 5px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--tc-line);
+  color: var(--tc-ink-2);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.tc-chip[data-active] {
+  border-color: transparent;
+  background: var(--tc-mine);
+  color: var(--tc-primary-dark);
+}
+
+.tc-rows {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 4px 8px 0;
+}
+
+.tc-room {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 58px;
+  padding: 0 8px;
+  border-radius: 12px;
+}
+
+.tc-room[data-active] {
+  background: var(--tc-selected);
+}
+
+.tc-room__body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.tc-room__line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tc-room__name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 17px;
+}
+
+.tc-room__time {
+  font-size: 11.5px;
+  color: var(--tc-ink-3);
+}
+
+.tc-room__preview {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: var(--tc-ink-2);
+  -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+  mask-image: linear-gradient(90deg, #000 85%, transparent);
+}
+
+.tc-badge {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--tc-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tc-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 62px;
+  border-top: 1px solid var(--tc-line);
+  flex-shrink: 0;
+}
+
+.tc-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--tc-ink-2);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tc-nav__item[data-active] {
+  color: var(--tc-primary-dark);
+}
+
+.tc-nav__pill {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--tc-mine);
+}
+
+/* ---- Room ---- */
+
+.tc-room-pane {
+  display: flex;
+  flex-direction: column;
+  width: 540px;
+  flex-shrink: 0;
+  background: url('./chat-bg-light.jpg') center / cover, #f6f7fb;
+}
+
+.tc-room-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 10px 0 16px;
+  background: #fff;
+  border-bottom: 1px solid var(--tc-line);
+  flex-shrink: 0;
+}
+
+.tc-room-head__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tc-room-head__name {
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.tc-room-head__sub {
+  font-size: 11.5px;
+  line-height: 14px;
+  color: var(--tc-ink-2);
+}
+
+/* The feed is pinned to its bottom: older messages go up as new ones land */
+.tc-feed {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 16px 14px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 56px);
+  mask-image: linear-gradient(180deg, transparent 0, #000 56px);
+}
+
+.tc-feed__stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.tc-msg {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.tc-msg--mine {
+  justify-content: flex-end;
+}
+
+.tc-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 340px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.tc-bubble--mine {
+  background: var(--tc-mine);
+}
+
+.tc-bubble__namebar {
+  margin-bottom: 2px;
+}
+
+.tc-bubble__name {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--tc-primary-dark);
+  margin-bottom: -3px;
+}
+
+.tc-bubble__text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 20px;
+  color: var(--tc-ink);
+}
+
+/* The time and ticks float at the end of the last line, as in the app */
+.tc-bubble__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  float: right;
+  margin: 5px 0 -4px 10px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--tc-ink-3);
+}
+
+.tc-ticks {
+  fill: none;
+  stroke: var(--tc-ink-3);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 300ms ease;
+}
+
+.tc-ticks__2 {
+  stroke-dasharray: 10;
+  stroke-dashoffset: 10;
+  transition: stroke-dashoffset 320ms cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+.tc-ticks[data-read] {
+  stroke: var(--tc-primary);
+}
+
+.tc-ticks[data-read] .tc-ticks__2 {
+  stroke-dashoffset: 0;
+}
+
+/* Emma's reply grows out of the typing dots: one bubble, its width eased
+   from the dots' to the text's, the text fading in once there is room */
+.tc-bubble--grow {
+  position: relative;
+  interpolate-size: allow-keywords;
+  width: 60px;
+  height: 36px;
+  overflow: hidden;
+  transition: width 420ms cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+.tc-bubble--grow[data-done] {
+  width: auto;
+}
+
+.tc-bubble--grow .tc-bubble__text {
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.tc-bubble--grow .tc-bubble__meta {
+  float: none;
+  margin: 0 0 0 10px;
+}
+
+.tc-bubble--grow[data-done] .tc-bubble__text {
+  opacity: 1;
+  transition-delay: 220ms;
+}
+
+.tc-bubble--grow .tc-dots {
+  position: absolute;
+  left: 15px;
+  top: 14px;
+  padding: 0;
+  transition: opacity 160ms ease;
+}
+
+.tc-bubble--grow[data-done] .tc-dots {
+  opacity: 0;
+}
+
+.tc-dots {
+  display: flex;
+  gap: 4px;
+  padding: 6px 2px;
+}
+
+.tc-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tc-ink-3);
+  animation: tc-dot 1.2s ease-in-out infinite;
+}
+
+.tc-dots i:nth-child(2) { animation-delay: 0.15s; }
+.tc-dots i:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes tc-dot {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+
+/* ---- Composer ---- */
+
+.tc-compose {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 18px;
+  flex-shrink: 0;
+}
+
+.tc-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px 0 16px;
+  border-radius: 21px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  outline: 1.5px solid transparent;
+  transition: outline-color 200ms ease;
+  color: var(--tc-ink-2);
+  font-size: 14.5px;
+}
+
+.tc-field[data-focus] {
+  outline-color: color-mix(in srgb, var(--tc-primary) 55%, transparent);
+}
+
+.tc-field__ph {
+  position: absolute;
+  left: 16px;
+  color: var(--tc-ink-3);
+  transition: opacity 120ms ease;
+}
+
+.tc-field__ph[data-hide] {
+  opacity: 0;
+}
+
+.tc-field__text {
+  white-space: pre;
+  color: var(--tc-ink);
+}
+
+.tc-caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 18px;
+  margin-left: 1px;
+  background: var(--tc-primary);
+  opacity: 0;
+}
+
+.tc-caret[data-show] {
+  animation: tc-blink 1.05s steps(1) infinite;
+}
+
+.tc-caret[data-typing] {
+  animation: none;
+  opacity: 1;
+}
+
+@keyframes tc-blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.tc-send {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--tc-primary);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 107, 216, 0.3);
+  transition: transform 160ms ease;
+  will-change: transform;
+}
+
+.tc-send__glyph {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.3, 0, 0.2, 1.3);
+}
+
+.tc-send__glyph[data-show] {
+  opacity: 1;
+  transform: none;
+}
+
+.tc-send[data-pressed] {
+  transform: scale(0.94);
+}
+
+/* ---- Room info: the side pane beside the conversation, cut by the stage ---- */
+
+.tc-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  padding: 18px 18px 0;
+  border-left: 1px solid var(--tc-line);
+  background: #fff;
+}
+
+.tc-info__tiles {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.tc-info__tile {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 50px;
+  border-radius: 12px;
+  background: var(--tc-soft);
+  color: var(--tc-primary);
+}
+
+/* ---- Compact: the room alone, for a phone column ---- */
+
+.tc .ss-stage[data-layout='compact'] .tc-win {
+  left: 20px;
+  top: 20px;
+  width: 340px;
+  height: 330px;
+}
+
+/* The room alone under the title bar; the window runs off the bottom just
+   under the composer */
+.tc .ss-stage[data-layout='compact'] .tc-appbar {
+  display: none;
+}
+
+.tc .ss-stage[data-layout='compact'] .tc-room-pane {
+  width: auto;
+  min-width: 0;
+  flex: 1;
+}
+
+.tc .ss-stage[data-layout='compact'] .tc-feed {
+  padding: 0 14px 12px;
+}
+
+.tc .ss-stage[data-layout='compact'] .tc-bubble {
+  max-width: 260px;
+}
+
+.tc .ss-stage[data-layout='compact'] .tc-compose {
+  padding: 8px 12px 38px;
+}
