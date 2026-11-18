@@ -93,6 +93,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `twake-typescript-conventions` | JS / TS | async/await, null over undefined, Intl/date-fns (not moment), AppLinker |
 | `twake-javascript-naming` | JS / TS | Function prefixes, cozy-client query `as`, import order |
 | `twake-frontend-testing` | Frontend tests | testing-library, data-testid, queryBy, colocated specs, no snapshots |
+| `twake-prune-tests` | All stacks | Delete tests that guard no behaviour: tied to the past, to nothing, or to the implementation; duplicates; production code only tests used |
 | `twake-frontend-lib-workflow` | React apps consuming cozy-* / twake-* libs | No hand-edits to `node_modules`, yarn link / rlink via cozy-libs monorepo |
 | `twake-cozy-client` | Apps querying a Cozy stack | No direct collection access, Q() + useQuery/client.query, shared queries module, alias naming, mandatory fetchPolicy, sortBy/indexFields invariants |
 | `twake-git-conventions` | All stacks | Conventional Commits, atomic commits, structured PR workflow with Summary-only bodies |
@@ -170,6 +171,7 @@ twake-guidelines/
 │   ├── twake-typescript-conventions/SKILL.md
 │   ├── twake-javascript-naming/SKILL.md
 │   ├── twake-frontend-testing/SKILL.md
+│   ├── twake-prune-tests/SKILL.md
 │   ├── twake-frontend-lib-workflow/SKILL.md
 │   ├── twake-cozy-client/SKILL.md
 │   └── twake-git-conventions/SKILL.md
