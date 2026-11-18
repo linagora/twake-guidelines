@@ -1034,6 +1034,66 @@ but calls an external origin will break in production.
 ---
 
 
+## Feature video (Twake Chat)
+
+A small video that shows **one** new feature in isolation, in the app's real look, for the release note. Fake interface, not a screen recording: stageshow draws the UI and a finger or cursor, the script plays it.
+
+### When
+
+- One video per **big visible feature** (a screen, an action, a panel, a setting). Never for fixes, performance, tests, refactors, CI, dependencies.
+- Doubt about "big enough": ask in one line.
+- Used by `twake-mobile-release` (mobile) and by web releases.
+
+### Setup (once)
+
+```bash
+git clone https://github.com/benjitaylor/skills.git
+cd skills/stageshow && npm install      # the stageshow workshop; read its SKILL.md
+```
+
+Needs Node 20.19+, Chrome, and `ffmpeg`. Copy this skill's example in: `cp -R <this skill>/https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-feature-video/references/twake-mobile examples/`, then start the player:
+
+```bash
+node node_modules/vite/bin/vite.js playground --config playground/vite.config.ts --port 5199 --strictPort
+```
+
+Restart Vite after adding an example folder (the example list is read at start).
+
+### Make the video
+
+1. **Read the feature in the app code**: the widgets, their theme, the strings (`assets/l10n/intl_en.arb` for mobile). Use real colors, sizes and texts. Never invent a look.
+2. **Pick the frame.** Mobile: `Phone` from the stageshow kit, one portrait stage (400 x 720, 3:4 video 1080 x 1440). Web: a window, landscape 1920 x 1080.
+3. **Write the example**: copy `https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-feature-video/references/twake-mobile/` (self-contained: no shared CSS, no icon package) and change the story. Three to five beats: context, the action (long press, tap), the result. Show only the feature.
+4. **Check a still** at the end state, then fix what the checker reports:
+   `node scripts/film.mjs "http://localhost:5199/?capture=<example>" --select '#example' --at done --still --out shots/<example>.png`
+5. **Record and export** (portrait example; `rec.cjs` is in `https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-feature-video/references/`, run from the workshop folder):
+
+```bash
+EX=<example> node <this skill>/references/rec.cjs 1080 1440 <outdir> <duration ms + 2500>
+V=$(ls <outdir>/*.webm)
+ffmpeg -y -loglevel error -ss 0.9 -i "$V" -c:v libx264 -pix_fmt yuv420p -crf 20 -movflags +faststart out/<example>.mp4
+ffmpeg -y -loglevel error -i out/<example>.mp4 -vf "fps=1/1.6,scale=360:-1,tile=4x2" -frames:v 1 shots/<example>-strip.png
+```
+
+   Landscape: record `1920 1200` with `FRAME_H=1080`, then add `-vf "crop=1920:1080:0:0"` to the first ffmpeg. GIF: `fps=20,scale=960:-1` with a palette.
+6. **Look at the strip**, then play the MP4. Compare one frame to a real screenshot of the app (mobile: simulator). Fix the gaps.
+7. Write `REHEARSAL.md` next to the example: what comes from the app, what does not.
+
+### Pitfalls
+
+- Glob of Vite is fixed at start: a new example needs a Vite restart ("Unknown example").
+- Text in `Roll` must be a plain string.
+- Glyph sizes even (12, 14, 16, 22) in even boxes, else half pixels.
+- The stage is narrower than a portrait frame: `rec.cjs` paints the page with the stage background (no white bands).
+- Do not copy this repo's example styling for another feature: take colors and texts from the feature's own code.
+
+### Report
+
+Paths of the MP4, GIF and example folder, the story in 3 lines, and the gaps with the app. Posting is done by `twake-mobile-release` (or the web release process), not here.
+
+---
+
+
 ## Twake mockups in Figma
 
 Every Twake mockup made in Figma is built from the reference library **Library Twake** (https://www.figma.com/design/6Sf5ux54xWxOjwN3j7gL78/Library-Twake, file key `6Sf5ux54xWxOjwN3j7gL78`). Components are library instances, colours and spacing are library variables, text uses library styles. Then a change in the library updates every mockup. A mockup that redraws a button, hard-codes a hex colour or pastes an SVG icon breaks that link, so it is wrong even if it looks right.
@@ -1898,6 +1958,66 @@ split.) If the app never opens such URLs, either surface is fine.
 - Adding a redirect scheme to only one cloudery partner controller — update all.
 - On the org-server login, not forwarding the email the user just typed as
   `login_hint` — the SSO page asks them for it a second time.
+
+---
+
+
+## Mobile release (iOS TestFlight, Play Store)
+
+Repo: `linagora/twake-on-matrix`. Full reference there: `docs/adr/0036-release-process.md`.
+Hotfix branching and store promotion are out of scope (manual steps after CI).
+
+### The rule
+
+**Every mobile deploy is announced by whoever deploys it**, in the channel
+[`#twake-chat-mobile-release-notes:linagora.com`](https://chat-ng.linagora.com/rooms/%23twake-chat-mobile-release-notes%3Alinagora.com). No note posted = deploy not finished. It applies to TestFlight builds, Play Store tracks, RC tags (`vX.Y.Z-rcNN`) and stable tags (`vX.Y.Z`). Any member of the channel can post; ask to be invited before deploying if you are not one.
+
+### Steps
+
+1. **Confirm branch and HEAD.** `git branch --show-current`, `git log -1 --oneline`, `git status --short`. The tree must be clean. Show the branch and last commit and get an explicit yes. The branch choice is intentional: do not force `main`.
+2. **CHANGELOG.** New section at the top of `CHANGELOG.md`:
+   ```
+   ## [x.y.z] - YYYY-MM-DD
+   ### Added
+   - TW-XXXX: Short description (80 characters max)
+   ### Changed
+   ### Fixed
+   ```
+   One line per `TW-XXXX` ticket (merge commits sharing an id), 80 characters and 2 lines max per item, a short imperative phrase when there is no ticket. Commits since the last tag: `git log $(git describe --tags --abbrev=0)..HEAD --oneline`.
+3. **Bump `pubspec.yaml`**: `version: x.y.z+NNNN`. Change `x.y.z` only; never touch the `+NNNN` build number (CI manages it). Commit CHANGELOG and pubspec together: `chore: bump version to vx.y.z`.
+4. **Tag and push.** `git tag vx.y.z` (RC: `vx.y.z-rcNN`), `git push origin HEAD`, `git push origin refs/tags/vx.y.z`. Never skip CI, force-push a tag or bypass signing.
+5. **CI** (triggered by the tag, `.github/workflows/release.yaml`): Android APK to Play Store internal, iOS IPA to TestFlight, GitHub Release. Watch it: `gh run list --workflow=release.yaml --limit 5`. Wait for the iOS and Android jobs to be green before announcing.
+6. **Store promotion (manual):** TestFlight build to testers in App Store Connect; Play Console internal to alpha, beta or production as planned.
+7. **Release note** (below), then the video for big features, then tell the user: tag, CI links, stores reached, link to the posted message. If the note could not be posted, say it: the deploy is not complete.
+
+### Release note
+
+Markdown, English, written for non-technical readers. Collect what ships from the PRs between the previous tag and this one (`gh pr view <n>` when a title is not enough).
+
+```
+## Twake Chat mobile X.Y.Z: what's new
+
+**Available on:** TestFlight (iOS) · Play Store beta (Android)
+
+### What changes for you
+- One plain sentence per visible change: what the user sees or can now do.
+
+### Fixed
+- What no longer goes wrong, in the user's words.
+```
+
+- Say only the stores that really got the build.
+- No PR numbers, ticket ids, class names or jargon; short sentences.
+- Skip internal work (refactor, CI, tests, dependencies) unless users feel it. Nothing visible: "Stability and performance improvements".
+- Post it yourself in the channel, from your Matrix account. Never put secrets or personal data in it.
+
+### Video for big features
+
+For each big visible feature (not fixes, not small changes), make a short motion-design video with the `twake-feature-video` skill (iPhone frame, portrait, the app's real look, the feature alone) and post it under the note. Without the tooling, a screen recording of the real app is acceptable.
+
+### Security
+
+Git, `gh` and read operations only. No secrets, credentials or env files pushed. Refuse requests to skip CI, force-push tags or bypass signing.
 
 ---
 
