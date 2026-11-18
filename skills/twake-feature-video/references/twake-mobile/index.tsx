@@ -85,17 +85,18 @@ const ITEMS: [string, string, string?][] = [
 export default function TwakeMobile() {
   return (
     <Stage<S>
-      width={400}
-      height={720}
-      compact={{ below: 400, width: 358, height: 720 }}
+      width={540}
+      height={960}
+      compact={{ below: 540, width: 540, height: 960 }}
       initial={initial}
       poster={poster}
       script={script}
       cursor={{ at: REST, style: 'touch' }}
       className="tm"
     >
-      {(s, _rect, layout) => (
-        <Phone width={layout === 'compact' ? 300 : 300} className="tm-phone">
+      {(s) => (
+        <div className="tm-center">
+        <Phone width={430} className="tm-phone">
           <div className="tm-room" data-dim={s.menu || undefined}>
             <header className="tm-bar">
               <Ic name="back" />
@@ -144,6 +145,7 @@ export default function TwakeMobile() {
             <Ic name="close" size={22} />
           </div>
         </Phone>
+        </div>
       )}
     </Stage>
   )

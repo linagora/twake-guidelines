@@ -1,7 +1,7 @@
 // Records one stageshow example as a WebM of any size (landscape or portrait).
 // Run it from the stageshow workshop folder, Vite running on :5199 (PORT=<n> to change):
 //   EX=<example> node rec.cjs <width> <height> <outDir> <durationMs>
-// Landscape 1920 1200 then crop 1920:1080; portrait (mobile) 1080 1350, no crop.
+// Landscape 1920 1200 then crop 1920:1080; portrait (mobile) 1080 1920, no crop.
 // The window is recorded as asked; for landscape ask 120px more height than the
 // frame so the frame never shows a grey band, and crop after.
 const { chromium } = require(process.cwd() + '/node_modules/playwright-core')

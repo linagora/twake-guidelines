@@ -57,3 +57,5 @@
 .tm-scrim { z-index: 4; }
 .tm-menu { z-index: 6; }
 .tm-snack { z-index: 7; }
+
+.tm-center { position: absolute; inset: 0; display: grid; place-items: center; }

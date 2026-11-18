@@ -31,14 +31,14 @@ Restart Vite after adding an example folder (the example list is read at start).
 ## Make the video
 
 1. **Read the feature in the app code**: the widgets, their theme, the strings (`assets/l10n/intl_en.arb` for mobile). Use real colors, sizes and texts. Never invent a look.
-2. **Pick the frame.** Mobile: `Phone` from the stageshow kit, one portrait stage (400 x 720, 3:4 video 1080 x 1440). Web: a window, landscape 1920 x 1080.
+2. **Pick the frame.** Mobile: `Phone` from the stageshow kit, one portrait stage (540 x 960, phone 430 wide, centered; 9:16 video 1080 x 1920, no margins to crop). Web: a window, landscape 1920 x 1080.
 3. **Write the example**: copy `references/twake-mobile/` (self-contained: no shared CSS, no icon package) and change the story. Three to five beats: context, the action (long press, tap), the result. Show only the feature.
 4. **Check a still** at the end state, then fix what the checker reports:
    `node scripts/film.mjs "http://localhost:5199/?capture=<example>" --select '#example' --at done --still --out shots/<example>.png`
 5. **Record and export** (portrait example; `rec.cjs` is in `references/`, run from the workshop folder):
 
 ```bash
-EX=<example> node <this skill>/references/rec.cjs 1080 1440 <outdir> <duration ms + 2500>
+EX=<example> node <this skill>/references/rec.cjs 1080 1920 <outdir> <duration ms + 2500>
 V=$(ls <outdir>/*.webm)
 ffmpeg -y -loglevel error -ss 0.9 -i "$V" -c:v libx264 -pix_fmt yuv420p -crf 20 -movflags +faststart out/<example>.mp4
 ffmpeg -y -loglevel error -i out/<example>.mp4 -vf "fps=1/1.6,scale=360:-1,tile=4x2" -frames:v 1 shots/<example>-strip.png
