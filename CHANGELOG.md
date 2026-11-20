@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.23.0](https://github.com/linagora/twake-guidelines/compare/v0.22.0...v0.23.0) (2026-11-20)
+
+
+### Features
+
+* **decisions:** Add a skill to record every decision in docs/decisions.md ([c3d8e0d](https://github.com/linagora/twake-guidelines/commit/c3d8e0d0dbc02aed6567a5acfc6675ffe09ca04d))
+
+
+### Bug Fixes
+
+* **react:** Say twake-mui is on MUI v9 ([7eff80a](https://github.com/linagora/twake-guidelines/commit/7eff80a18f2ca3307c9b153ebef0630fb5597619))
+
 ## [0.22.0](https://github.com/linagora/twake-guidelines/compare/v0.21.0...v0.22.0) (2026-11-17)
 
 
