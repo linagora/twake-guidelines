@@ -11,7 +11,7 @@ Every project keeps its decisions in a log, `docs/decisions.md`, versioned with 
 
 In a monorepo (npm, yarn or pnpm workspaces, `apps/*`, `packages/*`), each package keeps its own log, `<package>/docs/decisions.md` (for example `packages/twake-mui/docs/decisions.md`), and the repository root has none.
 
-- Search the log of the package you change, and the logs of the other packages your change reaches.
+- Search the log of the package you change, and the logs of the other packages your change reaches. In the other logs, also find the entries whose Scope line names your package (for example `grep -n "twake-mui" packages/*/docs/decisions.md`): a decision that touches several packages is written only once.
 - Write a decision in the log of the package it touches. When it touches several, write it once, in the log of the main one, and name the others in its Scope line.
 - Never create a `docs/decisions.md` at the root of a monorepo. A package with no log gets its own (see below).
 
