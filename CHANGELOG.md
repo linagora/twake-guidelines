@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.24.0](https://github.com/linagora/twake-guidelines/compare/v0.23.0...v0.24.0) (2026-11-24)
+
+
+### Features
+
+* **decisions:** Find the entries of other packages that name yours ([b49189e](https://github.com/linagora/twake-guidelines/commit/b49189ea21fa4dc3e2a27a86324675ee880b0408))
+* **decisions:** Keep one log per package in a monorepo ([74ebf3c](https://github.com/linagora/twake-guidelines/commit/74ebf3cfd4dfc6a5b759c4d394bc9a40a3fe3d94))
+* **decisions:** Keep one root log for an app, one per package in a library monorepo ([9f93000](https://github.com/linagora/twake-guidelines/commit/9f93000e428b71b4a6c48d320f6de1b5da61a765))
+* **testing:** Add twake-prune-tests skill ([d68896a](https://github.com/linagora/twake-guidelines/commit/d68896a85de7c2c73ad5e8590ce7ee314f13b664))
+
 ## [0.23.0](https://github.com/linagora/twake-guidelines/compare/v0.22.0...v0.23.0) (2026-11-20)
 
 
