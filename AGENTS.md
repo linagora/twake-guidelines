@@ -1038,13 +1038,15 @@ but calls an external origin will break in production.
 
 Every project keeps its decisions in a log, `docs/decisions.md`, versioned with the code. A decision missing from the log does not exist: the next agent or developer will not know it and will ask again, or undo it.
 
-### Monorepos
+### One app or several packages
 
-In a monorepo (npm, yarn or pnpm workspaces, `apps/*`, `packages/*`), each package keeps its own log, `<package>/docs/decisions.md` (for example `packages/twake-mui/docs/decisions.md`), and the repository root has none.
+A repository that ships one app keeps one log at its root, `docs/decisions.md`, even when the app is split into workspaces or into variants of the same app (`apps/private`, `apps/public`, `common`): those parts ship together as one product.
+
+A multi-package repository keeps one log per package and none at its root. It is either a library monorepo, whose packages are published on their own (for example twake-ui, twake-libs, cozy-libs), or a repository that groups several distinct apps and packages (for example twake-phone: `apps/gateway`, `apps/web`, `apps/workplace` and `packages/*`). Each package, and each app under `apps/`, keeps its own log, `<package>/docs/decisions.md` (for example `packages/twake-mui/docs/decisions.md` or `apps/gateway/docs/decisions.md`).
 
 - Search the log of the package you change, and the logs of the other packages your change reaches. In the other logs, also find the entries whose Scope line names your package (for example `grep -n "twake-mui" packages/*/docs/decisions.md`): a decision that touches several packages is written only once.
 - Write a decision in the log of the package it touches. When it touches several, write it once, in the log of the main one, and name the others in its Scope line.
-- Never create a `docs/decisions.md` at the root of a monorepo. A package with no log gets its own (see below).
+- Never create a `docs/decisions.md` at the root of a multi-package repository. A package with no log gets its own (see below).
 
 ### Before asking or proposing
 
@@ -1064,7 +1066,7 @@ Choices that stay inside the code of the change are not decisions, for example:
 
 Write the entry in the log in the same commit (or at least the same PR) as the change it explains. A decision taken with no code change (a question answered, a change refused) gets its own commit.
 
-Create the log if the project (in a monorepo, the package) has none, with a `# Decisions` title and one line saying it is append-only.
+Create the log if the project (in a multi-package repository, the package) has none, with a `# Decisions` title and one line saying it is append-only.
 
 ### Entry format
 
@@ -1081,7 +1083,7 @@ Create the log if the project (in a monorepo, the package) has none, with a `# D
 - Decision: one sentence, present tense, the rule as it now stands.
 - Decided by: who settled it, and a link to the source (PR, issue, review comment, message). When the source has no public link (a call, a private chat), name the person, the channel and the date. When you settled it alone, write `agent (session <id or PR link>), to be confirmed by <who>`, naming the person who must confirm it (the maintainer, or the designer for UX and UI).
 - Why: one line.
-- Scope: desktop, mobile or both, and the screens or modules it covers. In a monorepo, also the other packages it touches.
+- Scope: desktop, mobile or both, and the screens or modules it covers. In a multi-package repository, also the other packages it touches.
 
 A question still waiting for an answer is an entry too: title `## YYYY-MM-DD, [Category] Pending: short title`, the options instead of the decision, and who must decide. When it is settled, write a new entry whose Decision line starts with `Replaces the pending question of YYYY-MM-DD, "<title>".`
 
@@ -1102,13 +1104,13 @@ Add entries at the end of the log and leave past entries as they are, wrong ones
 
 ### AGENTS.md line
 
-Every project that follows this skill has this line in its `AGENTS.md`:
+Every project that follows this skill, a repository that ships one app included, has this line in its `AGENTS.md`:
 
 ```markdown
 - Decisions: `docs/decisions.md`, mandatory. Search it before asking a question or proposing a change; record every decision there, in the commit that applies it (skill `twake-decisions`).
 ```
 
-A monorepo names where its packages live (`packages/*`, `apps/*`, or both) and has this line instead:
+A multi-package repository names where its packages live (`packages/*`, `config/*`, `apps/*`) and has this line instead:
 
 ```markdown
 - Decisions: each package keeps its own `docs/decisions.md` (`packages/*/docs/decisions.md`), mandatory, none at the repo root. Search the log of the package you change before asking a question or proposing a change; record every decision in the log of the package it touches (the main one when it touches several, the others in its Scope line), in the commit that applies it (skill `twake-decisions`).
