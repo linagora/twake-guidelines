@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.25.0](https://github.com/linagora/twake-guidelines/compare/v0.24.0...v0.25.0) (2026-11-24)
+
+
+### Features
+
+* **decisions:** Keep one log per app in a repo that groups several apps ([#85](https://github.com/linagora/twake-guidelines/issues/85)) ([96e2497](https://github.com/linagora/twake-guidelines/commit/96e2497c5999a803d0d9a5dc47832b302e240c20))
+
 ## [0.24.0](https://github.com/linagora/twake-guidelines/compare/v0.23.0...v0.24.0) (2026-11-24)
 
 
