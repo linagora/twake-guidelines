@@ -107,6 +107,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `twake-bender-scripts` | Bender instance administration | Agent never calls the Bender API nor sees a token: writes curl scripts (app updates, source changes, context and instance flags) the user runs and pastes back |
 | `twake-figma-mockups` | Figma mockups | Library Twake instances only, colours and spacing bound to its variables, its text styles and icons, an audit before handing over |
 | `twake-decisions` | All projects | Every decision recorded in `docs/decisions.md`, append-only, in the commit that applies it, with a category, who decided and the source; searched before asking or proposing |
+| `twake-workplace-b2b` | Organization features in the local stack | The `twakedemo` organization of twake-workplace-docker, a cozy-stack build with group propagation, and a recipe that checks a drive follows its group's members |
 
 ### Planned
 
