@@ -54,17 +54,10 @@ the wrappers run `source ../.env` (and pass `--env-file ../.env`), so an exporte
 BASE_DOMAIN=twake.local
 COZY_DEV_APP_SLUG=<slug>
 COZY_DEV_APP_BUILD=/abs/path/to/<app>/build
-COZY_ORG_ID=twpdocker        # MUST NOT contain a hyphen — see below
 ```
 
-`COZY_ORG_ID` must be a valid instance slug. With `subdomains: flat` (the default),
-cozy-stack rejects a `-` in the first label, because `-` separates app from instance
-in `user1-drive.twake.local`. A hyphenated `COZY_ORG_ID` can never match an instance,
-so `IsOrganizationInstance()` is never true, `org_drive` is never set, and
-**shared drives never appear in the Drive sidebar** no matter what the feature flag says.
-
-`org_id` is inherited from `COZY_ORG_ID` **at provisioning time only**. Instances
-created before it was set keep an empty org; destroy and re-provision them.
+`user1` to `user3` are B2C accounts. For organization features (shared drives,
+groups), use the `twakedemo` organization: see `twake-workplace-b2b`.
 
 ## 4. Enable the shared-drive feature flag
 
@@ -152,17 +145,9 @@ scripts/twake users list        # require status `ok`; `scim_only` = provisionin
 Omitting `--password` leaves an LDAP user that cannot log in. If `users list`
 shows `scim_only`, stop and surface `auth.dlq` + `cozyt` logs.
 
-For **shared drives** you also need the organization instance, whose slug equals
-`COZY_ORG_ID`:
-
-```bash
-scripts/twake users add twpdocker --email org@example.org \
-  --given-name Org --family-name Instance --password '<pw>'
-```
-
-Only drives created **on that instance** get `org_drive: true`, and the Drive
-sidebar (`SharedDriveList`) renders nothing but org drives. A drive created on a
-normal user instance is a valid sharing that never shows up in the nav.
+For **shared drives**, use the organization accounts that
+`scripts/seed-organization.sh` creates (`twake-workplace-b2b`). The Drive sidebar
+shows only drives created on the organization instance.
 
 ## 9. Install the local app into the instance
 
@@ -238,7 +223,6 @@ at all.
 - Booting from `cozy_stack/` instead of the root `wrapper.sh` — CouchDB never
   starts and `cozyt` stays unhealthy.
 - Keeping `--dev` in the dev-app overlay — breaks SSO login and auto-accept.
-- A hyphenated `COZY_ORG_ID` — silently disables shared drives forever.
 - Assuming `extra_hosts` covers instance domains — peer calls hit loopback and
   fail silently into an email fallback.
 - Expecting auto-accept on a non-drive share, or on a drive created outside the
