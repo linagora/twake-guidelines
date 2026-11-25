@@ -93,6 +93,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `twake-typescript-conventions` | JS / TS | async/await, null over undefined, Intl/date-fns (not moment), AppLinker |
 | `twake-javascript-naming` | JS / TS | Function prefixes, cozy-client query `as`, import order |
 | `twake-frontend-testing` | Frontend tests | testing-library, data-testid, queryBy, colocated specs, no snapshots |
+| `twake-prune-tests` | All stacks | Delete tests that guard no behaviour: tied to the past, to nothing, or to the implementation; duplicates; production code only tests used |
 | `twake-frontend-lib-workflow` | React apps consuming cozy-* / twake-* libs | No hand-edits to `node_modules`, yarn link / rlink via cozy-libs monorepo |
 | `twake-cozy-client` | Apps querying a Cozy stack | No direct collection access, Q() + useQuery/client.query, shared queries module, alias naming, mandatory fetchPolicy, sortBy/indexFields invariants |
 | `twake-git-conventions` | All stacks | Conventional Commits, atomic commits, structured PR workflow with Summary-only bodies |
@@ -102,6 +103,10 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `migrate-to-twake-mui` | cozy-ui to twake-mui migration | One component per PR: move MUI v4 overloads to v9 theme overrides, port the cozy-ui doc examples to Storybook and Argos stories, same render |
 | `twake-create-app` | New Cozy-web app | Decide pure cozy app vs coquille (external backend) by where the backend lives, scaffold from cozy-app-template, wire mandatory Sentry (DSN + release), set up registry publish CI (cozy-app-publish, REGISTRY_TOKEN, tag-driven channels), watch prod CSP |
 | `twake-react-app` | Twake React front-end apps | React 19, twake-mui only (local `@/ds/` for gaps), TanStack Query or cozy-client by backend, Rsbuild, React Router, hexagonal layout, twake-i18n in 7 languages, mandatory OIDC, RGAA / EN 301 549, dockerised self-testing stack |
+| `twake-app-integrations` | Apps that need another app | Apps never know each other: cozy-stack intents through cozy-interapp (and twake-sdk outside the stack) when another app acts for the user, manifest declaration, handler page, caller; RabbitMQ to sync data |
+| `twake-bender-scripts` | Bender instance administration | Agent never calls the Bender API nor sees a token: writes curl scripts (app updates, source changes, context and instance flags) the user runs and pastes back |
+| `twake-figma-mockups` | Figma mockups | Library Twake instances only, colours and spacing bound to its variables, its text styles and icons, an audit before handing over |
+| `twake-decisions` | All projects | Every decision recorded in `docs/decisions.md`, append-only, in the commit that applies it, with a category, who decided and the source; searched before asking or proposing |
 | `twake-app-release` | Cozy/Twake web app releases (Drive, Home, Notes) | Validate and prepare grouped release notes, then publish betas and stable releases with cozy-app-release and monitor GitHub Actions |
 
 ### Planned
@@ -110,6 +115,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 - `java-conventions` — Spring / Quarkus patterns
 - `go-conventions` — project layout, error handling
 - `ci-deployment` — Travis / GitHub Actions, feature flags
+- `rabbitmq-messages`: syncing data between apps over RabbitMQ (exchanges, message format, naming)
 
 ## Contributing
 
@@ -166,6 +172,7 @@ twake-guidelines/
 │   ├── twake-typescript-conventions/SKILL.md
 │   ├── twake-javascript-naming/SKILL.md
 │   ├── twake-frontend-testing/SKILL.md
+│   ├── twake-prune-tests/SKILL.md
 │   ├── twake-frontend-lib-workflow/SKILL.md
 │   ├── twake-cozy-client/SKILL.md
 │   └── twake-git-conventions/SKILL.md
@@ -174,7 +181,11 @@ twake-guidelines/
 │   └── twake-package-manager-audit/SKILL.md
 │   └── twake-create-app/SKILL.md
 │   └── twake-react-app/SKILL.md
+│   └── twake-app-integrations/SKILL.md
 │   └── migrate-to-twake-mui/SKILL.md
+│   └── twake-bender-scripts/SKILL.md
+│   └── twake-figma-mockups/SKILL.md
+│   └── twake-decisions/SKILL.md
 ├── AGENTS.md                   # Generated aggregate for OpenCode / other AGENTS.md consumers
 ├── scripts/
 │   └── gen-agents.sh           # Regenerates AGENTS.md from skills/

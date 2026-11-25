@@ -196,6 +196,124 @@ first, CI shows the second. Report all of that to the user in chat instead.
 ---
 
 
+## App integrations (Twake / Cozy)
+
+Twake apps do not know each other. An app talks to the platform, never to another app:
+
+- It never calls another app's API, never builds another app's URLs, and never names another app by its slug. The only exception is the origins its CSP must list (`frame-src`, `frame-ancestors`), see below.
+- When another app must act for the user, the app sends an intent to cozy-stack. The stack finds an installed app that handles it and returns a URL, which the app loads in an iframe. The other app does the work there, in its own authenticated context, and sends the result back. It may show a screen (pick a file, write a mail) or nothing at all (store files the caller sends).
+- To keep their data in sync, apps exchange RabbitMQ messages. Their conventions (exchanges, message format, naming) will be covered by a dedicated skill.
+
+This way Drive can be replaced by any app that declares the same intents and honours the same contracts.
+
+### Intents
+
+An intent is an `action` (`PICK`, `OPEN`, `CREATE`, `UPLOAD`...) on a `type` (a doctype such as `io.cozy.files`, or a MIME type). The caller asks for it. The handler declares it in its manifest and does the work in the caller's iframe. cozy-interapp names them *client* and *service*.
+
+1. The caller sends `POST /intents` with the action, the type and permissions.
+2. The stack reads the manifests of the installed webapps and returns `services: [{ slug, href }]`. When none matches, the list is empty, and `availableApps` lists the registry apps that would match.
+3. The caller loads `href` in an iframe. The handler posts `ready`, and the caller answers with the intent data.
+4. The handler posts `readyToUse` once it is ready, then ends with `done` (with a result), `cancel` or `error`.
+
+React apps call and serve intents with cozy-interapp, never with their own copy of the protocol. An app not served by the stack gets its stack token from `@linagora/twake-sdk` and hands it to cozy-interapp (see below). The cozy-interapp [README](https://github.com/linagora/cozy-libs/blob/f145185f53e86562d088e8cb26259b91b5fa6af9/packages/cozy-interapp/README.md) is the reference for the messages; the stack side is in [`docs/intents.md`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/docs/intents.md). [`IntentIframe` and `IntentDialogOpener`](https://github.com/linagora/cozy-libs/tree/f145185f53e86562d088e8cb26259b91b5fa6af9/packages/cozy-ui-plus/src/Intent) wrap it for apps on cozy-ui.
+
+cozy-intent is a different library: the bridge between the React Native flagship app and its webviews. It has nothing to do with these intents.
+
+#### Declare an intent (handler)
+
+In `manifest.webapp`, as [Drive does](https://github.com/linagora/twake-drive/blob/c28e8ceafaa15d63f688ecbfd28383c77de1a925/manifest.webapp#L107-L133):
+
+```json
+"intents": [
+  { "action": "PICK", "type": ["io.cozy.files"], "href": "/intents" }
+]
+```
+
+- The stack compares the action case-insensitively and the type as an exact string ([`FindIntent`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/model/app/webapp.go#L681-L699)). A MIME type may end with `/*` (`image/*`); a doctype has no wildcard. Handlers may compare the action exactly (Drive checks `action === 'UPLOAD'`): callers send it in the case the handler's contract uses.
+- `href` is a path relative to the app, without a query string: the stack replaces the query with `?intent=<id>`.
+- An app served outside its cozy subdomain names two feature flags in its manifest, whose values are URLs: `service_url_flag` (base URL of its intent pages, when it handles intents) and `client_url_flag` (its own URL, when it calls intents), see [`docs/apps.md`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/docs/apps.md#L33-L34).
+- Write down the contract (data in, result out, errors) in the handler's repo, like Drive's [`PICK`](https://github.com/linagora/twake-drive/blob/c28e8ceafaa15d63f688ecbfd28383c77de1a925/docs/file-picker-intent.md) and [`UPLOAD`](https://github.com/linagora/twake-drive/blob/c28e8ceafaa15d63f688ecbfd28383c77de1a925/docs/upload-intent.md), or `CREATE io.cozy.mails` in twake-mail-frontend (`docs/cozy-intents.md`). Callers code against that document, never against the handler's internals.
+
+#### Get the manifest onto the instance
+
+The stack resolves an intent from the manifests of the apps **installed** on the instance ([`FillServices`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/model/intent/intents.go#L96-L118)), and `GET /apps/` lists only those. A manifest that is only on the registry resolves nothing.
+
+- Publish the app on the registry as `twake-create-app` describes (`cozy-app-publish`, channels, `REGISTRY_TOKEN`).
+- Install it on the instance, from `registry://<slug>/<channel>` ([`docs/apps.md`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/docs/apps.md#L254-L273)). Apps listed at instance creation (`Apps`, `cozy-stack instances add --apps`) are installed from `stable` ([`installApp`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/model/instance/lifecycle/helpers.go#L29-L43)).
+- A new or changed intent counts only once the instance runs the new version. The stack updates an app lazily, when it serves the app's index page or answers `GET /apps/:slug` ([`DoLazyUpdate`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/model/app/installer.go#L640-L704)), never when it resolves an intent. Until the handler app is opened or updated, callers see its old intents.
+- When the new version also changes the app's permissions, the update stops at `available_version` and waits for the user, unless the app is a platform app (`additional_platform_apps` in the context) or the context sets `permissions_skip_verification` ([`installer.go`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/model/app/installer.go#L425-L461)). A change of terms stops it too, for every app. Ship an intent change without a permission change when you can.
+- An app served outside the stack (a coquille) is installed the same way: its manifest declares the intents, and the stack builds `href` from the URL in its `service_url_flag` flag.
+
+The page at `href`, reduced from Drive's [`IntentHandler.jsx`](https://github.com/linagora/twake-drive/blob/c28e8ceafaa15d63f688ecbfd28383c77de1a925/src/modules/services/components/IntentHandler.jsx) and [`Picker.jsx`](https://github.com/linagora/twake-drive/blob/c28e8ceafaa15d63f688ecbfd28383c77de1a925/src/modules/services/components/Picker.jsx):
+
+```js
+import { Intents } from 'cozy-interapp'
+
+const intentId = new URLSearchParams(window.location.search).get('intent')
+const service = await new Intents({ client }).createService(intentId, window)
+const { action, type } = service.getIntent().attributes
+const data = service.getData()
+
+// once the UI is rendered and its first data loaded
+service.notifyReadyToUse()
+
+service.terminate(result) // the user confirmed, or the work is done
+service.cancel()          // the user closed it
+service.throw(error)      // the handler cannot work at all
+```
+
+- The handler acts with its own rights. Its page runs with its own token, the stack does not check that it has rights on the type, and the caller gets only what the handler sends back. Control what you return: Drive's picker returns the full documents when the caller asks for them, a sharing link, or a download link backed by a 5-minute share, never more than the user picked.
+- Pass the intent id to `createService`. Without it, cozy-interapp reads `location.search.split('=')[1]`, which is wrong as soon as another parameter follows (`&session_code=` on mobile).
+- A handler with a screen draws its own close button and calls `service.cancel()`. Call `service.hideCross()` when the caller should show its own instead.
+- Business errors (a file deleted before confirmation) stay in the handler's UI. `service.throw()` is for technical errors, and a handler that cannot work never sends `readyToUse`.
+- A handler served from another origin than the stack does two things, since the stack only sets `frame-ancestors` on pages it serves. Its server sends a CSP `frame-ancestors` listing the caller apps ([`docs/intents.md`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/docs/intents.md#L259), and §9 of `twake-react-app`). Its page calls `createService(intentId, window, { requireFrameAncestors: true })`, which checks `location.ancestorOrigins`, absent from Firefox before 148: the header is the only protection there.
+
+#### Call an intent (caller)
+
+```js
+import { Intents } from 'cozy-interapp'
+
+const intents = new Intents({ client }) // an app served by the stack, with cozy-client
+const picking = intents
+  .create('PICK', 'io.cozy.files', { multiple: false, downloadLink: { label: 'Attach' } })
+  .start(container, { onReadyToUse, onShowCross, onHideCross })
+
+// picking.stop() closes it early (the user navigates away)
+const result = await picking // the handler's result, or null when cancelled
+```
+
+An app not served by the stack uses two libraries: [`@linagora/twake-sdk`](https://github.com/linagora/twake-libs/blob/a2f22a24cc39ae14fbeebfc8694ed3fa833fc67a/packages/twake-sdk/README.md) for the stack token, cozy-interapp for the exchange with the handler. Hand the SDK's `fetchJSON` to cozy-interapp:
+
+```js
+const intents = new Intents({
+  fetch: (method, path, body) =>
+    sdk.fetchJSON(path, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body)
+    })
+})
+```
+
+- To decide whether to offer the action, read the installed apps (`GET /apps/`, `sdk.getAllApps()` with twake-sdk) and look for a manifest whose `intents` declare the action and type, with the stack's matching rules (see Declare an intent). It needs `GET` on `io.cozy.apps` in the caller's permissions. Each `POST /intents` stores an intent document, so call it only when the user acts.
+- `null` means the user cancelled. The promise rejects on a technical error, and with `Unable to find a service` when `services` comes back empty. `POST /intents` itself can fail with a 500 when there is no match, because the stack then queries the registries ([`createIntent`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/web/intents/intents.go#L102-L146)). Treat a failed call like a missing handler.
+- You own `container`. cozy-interapp puts the iframe in it, and `resize` messages set the size of the container, not of the iframe: make the iframe fill it. A handler without a screen goes in a hidden container.
+- Show a loading state until `onReadyToUse`, with a timeout (the README suggests 20 seconds): a cross-origin iframe reports no loading error.
+- An app not served by the stack adds the handler's origin to its own CSP `frame-src`.
+- cozy-interapp listens on the window of the app. When the iframe sits in another window (an overlay of the host page), dispatch each of its messages again on the app's window with `window.dispatchEvent(new MessageEvent('message', { data, origin, source }))`. A `postMessage` relay would change `origin` and `source`, and cozy-interapp would drop the message.
+
+#### What the platform does not do
+
+These come from the stack code, and some contradict `docs/intents.md`:
+
+- The stack grants no permission. It stores the `permissions` argument of `create` without using it ([`createIntent`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/web/intents/intents.go#L102-L146)).
+- The intent data never reach the stack. cozy-interapp sends them by `postMessage` after `ready`; `GET /intents/:id` does not return them.
+- The user does not choose between handlers. The stack lists every matching app ([`FindIntent`](https://github.com/linagora/cozy-stack/blob/b468d0c1df7a41c4a836891caba9d6bc65d40189/model/app/webapp.go#L681-L699)), and cozy-interapp takes the first ([`pickService`](https://github.com/linagora/cozy-libs/blob/f145185f53e86562d088e8cb26259b91b5fa6af9/packages/cozy-interapp/src/helpers.js#L30-L37)).
+- Each side accepts messages only from the other's origin (the intent's `client` attribute, the origin of `href`).
+
+---
+
+
 ## Release a Cozy/Twake App
 
 Use [cozy-app-release](https://github.com/linagora/twake-tools/tree/main/cozy-app-release)
@@ -462,6 +580,119 @@ Do not bypass a failed validation gate or failed CLI operation with this path.
 
 The canonical publisher workflow is
 https://github.com/linagora/cozy-libs/tree/master/packages/cozy-app-publish#release-workflow.
+
+---
+
+
+## Bender scripts (Twake / Linagora)
+
+Apply whenever a task touches Bender, the admin tool for Cozy/Twake instances at
+`https://bender.cozycloud.cc` (API doc: `https://bender.cozycloud.cc/api/doc/`).
+Bender acts on production and dev instances with the user's personal
+credentials, so the split is strict: **the agent writes the script, the user
+runs it and pastes the output back.**
+
+### Hard rules
+
+- **Never call the Bender API.** No `curl`, no `fetch`, no browser, no
+  background job against `bender.cozycloud.cc`, not even a read. Every call,
+  including the verification one, is a script the user runs.
+- **Never handle a Bender token.** Never ask for it. Scripts read it from the
+  environment with `${BENDER_TOKEN:?}` and nothing else: never as an argument,
+  never inline, never in a file. If the user pastes a token in the conversation,
+  say so, do not use it, and tell them to revoke it on their Bender profile page
+  (`https://bender.cozycloud.cc/profile`) and generate a new one.
+- **Print only what verifies the result.** Scripts output `ok`, version, state,
+  source or flag values, so the pasted output carries nothing sensitive.
+- **Write actions default to being asked for.** Only write (`PUT`, `POST`,
+  `DELETE`) what the user explicitly asked. A request to "check" something gets
+  a read script.
+
+### Script conventions
+
+Give the user a single `bash` block they can paste as-is, with the token read
+from the environment and the loop over instances explicit:
+
+```bash
+export BENDER_TOKEN=<paste your token here, not in the chat>
+```
+
+```bash
+H=(-H "Authorization: Bearer ${BENDER_TOKEN:?}" -H "Accept: application/json" -H "Content-Type: application/json")
+B=https://bender.cozycloud.cc
+for d in alice.example.org bob.example.org; do
+  D="$d"
+  r=$(curl -s -X PUT "${H[@]}" -d '{"force":true}' "$B/instances/dev/$D/apps/drive?synchronous=true")
+  echo "$d: $(echo "$r" | python3 -c 'import sys,json;j=json.load(sys.stdin);a=(j.get("data") or {}).get("attributes") or {};print(j.get("ok"),a.get("source"),a.get("version"),a.get("state"))' 2>/dev/null || echo "$r" | head -c 200)"
+done
+```
+
+- `Accept: application/json` is required, otherwise Bender renders HTML.
+- The env (`dev`, `prod`, ...) is the first path segment after `/instances/`.
+  When unsure, give the user a guess script first:
+  `curl -s "${H[@]}" "$B/instances/guess/<domain>"` returns `{"env": ...}`.
+- Always finish with a **verify** script (a read) so the user can confirm the
+  state and paste it back.
+- When the user pastes output, read it as data: report versions, states and
+  failures, then propose the next script if something is off.
+
+### Endpoint reference
+
+All routes are relative to `https://bender.cozycloud.cc`. `<env>` is the
+environment, `<domain>` the full instance domain, `<slug>` the app slug.
+
+#### Apps and konnectors
+
+| Action | Call |
+|---|---|
+| List installed apps | `GET /instances/<env>/<domain>/apps` → `{"apps": [{slug, version, source, state}, ...]}` |
+| Update an app to latest on its current source | `PUT /instances/<env>/<domain>/apps/<slug>?synchronous=true` with body `{}` |
+| Change an app's source and update | same, body `{"source": "registry://<slug>/<channel>"}` |
+| Bypass user consent on permission changes | add `"force": true` to the body (needs the force-update scope on the user's Bender account, else 403) |
+| Install an app | `POST /instances/<env>/<domain>/apps` |
+| Uninstall an app | `DELETE /instances/<env>/<domain>/apps/<slug>` |
+| Konnectors | same routes with `/konnectors` in place of `/apps` |
+
+`?synchronous=true` makes Bender wait for cozy-stack and answer
+`{"ok": <bool>, "data": <app manifest>}`. `ok` is true when the final state is
+`installed` or `ready`. Without it the call returns immediately with the state
+before the update.
+
+"Update" means "latest version on the app's current registry channel". If a
+newer version is only on another channel, change the source (for example
+`registry://drive/dev`).
+
+#### Feature flags
+
+| Scope | Call |
+|---|---|
+| Read a context's config and flags | `GET /contexts/<env>/<context>` → `{"context": {config, office, ...}, "context_flags": {...}}` |
+| Read an instance's flags | `GET /instances/<env>/<domain>/features` |
+| Set a context flag | `PUT /instances/<env>/features` with body `{"source": "ratio", "context": "<context>", "name": "<flag>", "value": [{"ratio": 1, "value": <json>}]}` |
+| Set an environment default flag | `PUT /instances/<env>/features` with body `{"source": "defaults", "name": "<flag>", "value": <json>}` |
+| Set an instance flag | `PUT /instances/<env>/<domain>/features` with body `{"source": "instance", "name": "<flag>", "value": <json>}` |
+| Delete a flag | same call with `"value": null` |
+
+`value` is a JSON value, not a string: `true`, `"https://..."`, or an object.
+For `ratio` it is an array of `{ratio, value}` entries; `ratio: 1` applies to
+every instance of the context.
+
+A context's `office`, `config`, `cloudery_endpoint` and similar entries come
+from the cozy-stack configuration file, not from flags. Bender cannot write
+them. Say so and point the user to ops instead of inventing a call.
+
+#### Instances
+
+| Action | Call |
+|---|---|
+| Guess the env of a domain | `GET /instances/guess/<domain>` |
+| Instance details | `GET /instances/<env>/<domain>` |
+| List instances of an env | `GET /instances/<env>/list` |
+
+For anything not listed here, read the API doc at
+`https://bender.cozycloud.cc/api/doc/` with the user, or the route docstrings in
+the `bender` repository (`bender/routes/instances.py`,
+`bender/routes/environments.py`). Do not guess payload shapes.
 
 ---
 
@@ -1069,6 +1300,157 @@ but calls an external origin will break in production.
 - Run/test locally → `twake-cozy-dev-env`.
 - Branch, commit, PR → `twake-git-conventions`.
 - Write the app code → the `twake-*-conventions` skills.
+
+---
+
+
+## Decisions log (Twake / Cozy)
+
+Every project keeps its decisions in a log, `docs/decisions.md`, versioned with the code. A decision missing from the log does not exist: the next agent or developer will not know it and will ask again, or undo it.
+
+### One app or several packages
+
+A repository that ships one app keeps one log at its root, `docs/decisions.md`, even when the app is split into workspaces or into variants of the same app (`apps/private`, `apps/public`, `common`): those parts ship together as one product.
+
+A multi-package repository keeps one log per package and none at its root. It is either a library monorepo, whose packages are published on their own (for example twake-ui, twake-libs, cozy-libs), or a repository that groups several distinct apps and packages (for example twake-phone: `apps/gateway`, `apps/web`, `apps/workplace` and `packages/*`). Each package, and each app under `apps/`, keeps its own log, `<package>/docs/decisions.md` (for example `packages/twake-mui/docs/decisions.md` or `apps/gateway/docs/decisions.md`).
+
+- Search the log of the package you change, and the logs of the other packages your change reaches. In the other logs, also find the entries whose Scope line names your package (for example `grep -n "twake-mui" packages/*/docs/decisions.md`): a decision that touches several packages is written only once.
+- Write a decision in the log of the package it touches. When it touches several, write it once, in the log of the main one, and name the others in its Scope line.
+- Never create a `docs/decisions.md` at the root of a multi-package repository. A package with no log gets its own (see below).
+
+### Before asking or proposing
+
+Search the log before you ask a question, propose a change, or reopen a choice. If a decision answers it, follow the decision and cite it. To challenge it, say which entry you challenge and why; a new decision then replaces it (see below).
+
+### What is a decision
+
+A decision is a choice that binds more than the current change. Record it when either holds:
+
+- someone other than you settled it: the product owner or a maintainer answers a question, the designer sets a rule, a review settles a point (a reviewer asks for X, the author agrees or argues, the outcome is the decision);
+- it sets something a later change must respect: a behaviour the user sees, a contract with another app or service, the architecture, the infrastructure, a product or design rule.
+
+Choices that stay inside the code of the change are not decisions, for example:
+
+- naming a helper, or splitting a component into two files;
+- picking `map` over a loop, or the order of two independent checks.
+
+Write the entry in the log in the same commit (or at least the same PR) as the change it explains. A decision taken with no code change (a question answered, a change refused) gets its own commit.
+
+Create the log if the project (in a multi-package repository, the package) has none, with a `# Decisions` title and one line saying it is append-only.
+
+### Entry format
+
+```markdown
+## 2026-11-20, [UX] Moving a file to the trash shows Undo
+
+- Decision: moving a file to the trash happens at once and shows a snackbar with an Undo action, with no confirmation dialog.
+- Decided by: Alice Martin (design), [review comment](https://example.com/org/app/pull/42#comment-1)
+- Why: the trash already makes the action reversible, so a dialog only slows the user down.
+- Scope: desktop and mobile, file list and file viewer.
+```
+
+- Title: `## YYYY-MM-DD, [Category] short title`. The date is the day of the decision.
+- Decision: one sentence, present tense, the rule as it now stands.
+- Decided by: who settled it, and a link to the source (PR, issue, review comment, message). When the source has no public link (a call, a private chat), name the person, the channel and the date. When you settled it alone, write `agent (session <id or PR link>), to be confirmed by <who>`, naming the person who must confirm it (the maintainer, or the designer for UX and UI).
+- Why: one line.
+- Scope: desktop, mobile or both, and the screens or modules it covers. In a multi-package repository, also the other packages it touches.
+
+A question still waiting for an answer is an entry too: title `## YYYY-MM-DD, [Category] Pending: short title`, the options instead of the decision, and who must decide. When it is settled, write a new entry whose Decision line starts with `Replaces the pending question of YYYY-MM-DD, "<title>".`
+
+### Categories
+
+Every entry has exactly one. When a decision spans two, take the one that dominates, or write two entries.
+
+- UX: how the user goes through a task (flows, confirmations, defaults, focus). Example: a new message opened with its recipients puts the focus on the subject.
+- UI: how something looks (colour, spacing, typography, icons, layout). Example: destructive actions show their label and icon in the error colour of the theme.
+- Product: what the product does or does not do, and for whom. Example: remote images load by default, blocking them is a setting.
+- Architecture: how the code is split and talks to other systems (modules, contracts, data flow). Example: apps reach each other through intents, never through direct calls.
+- Infra: how it is built, deployed and run (CI, images, charts, environments). Example: the image reads its configuration from mounted JSON files.
+- Tech: a library, tool or coding choice inside a module. Example: TanStack Query for server state, no Redux.
+
+### Append only
+
+Add entries at the end of the log and leave past entries as they are, wrong ones included. When a decision changes, write a new entry whose Decision line starts with `Replaces the decision of YYYY-MM-DD, "<title>".` The old entry stays as history.
+
+### AGENTS.md line
+
+Every project that follows this skill, a repository that ships one app included, has this line in its `AGENTS.md`:
+
+```markdown
+- Decisions: `docs/decisions.md`, mandatory. Search it before asking a question or proposing a change; record every decision there, in the commit that applies it (skill `twake-decisions`).
+```
+
+A multi-package repository names where its packages live (`packages/*`, `config/*`, `apps/*`) and has this line instead:
+
+```markdown
+- Decisions: each package keeps its own `docs/decisions.md` (`packages/*/docs/decisions.md`), mandatory, none at the repo root. Search the log of the package you change before asking a question or proposing a change; record every decision in the log of the package it touches (the main one when it touches several, the others in its Scope line), in the commit that applies it (skill `twake-decisions`).
+```
+
+---
+
+
+## Twake mockups in Figma
+
+Every Twake mockup made in Figma is built from the reference library **Library Twake** (https://www.figma.com/design/6Sf5ux54xWxOjwN3j7gL78/Library-Twake, file key `6Sf5ux54xWxOjwN3j7gL78`). Components are library instances, colours and spacing are library variables, text uses library styles. Then a change in the library updates every mockup. A mockup that redraws a button, hard-codes a hex colour or pastes an SVG icon breaks that link, so it is wrong even if it looks right.
+
+### Before starting
+
+1. Load the Figma skills `figma-use` (mandatory before any `use_figma` call) and `figma-generate-design`. Call `create_session` on the **target** file (the designer's mockup file), never on the library file: the library is read-only for this work.
+2. Check that Library Twake is enabled in the target file: run `search_design_system` for "button" and confirm results come from Library Twake. If not, stop and ask the designer to enable it (Assets panel → Libraries → Library Twake), then continue.
+3. Settle with the designer, in one short question only if it is unclear: which app (Mail, Drive, Chat, Calendar, Contacts, AI…), desktop or mobile, light or dark, English (default) or French.
+
+### Building rules
+
+- **Components**: insert instances of library components (table below). Import by key with `importComponentSetByKeyAsync` / `importComponentByKeyAsync`; if a key fails (library republished), find the component by name with `search_design_system`. Configure instances through their variant and component properties (size, colour, state, "Change icon", texts). Never detach an instance, never rebuild a component from rectangles and text.
+- **Colours**: bind fills and strokes to variables of the **Twake UI** collection (groups Background, Text, Action, Divider, Border, Primary, Secondary, Error, Warning, Success, Info, Category, Grey). Theme = variable mode on the top frame: Light, Dark, Calendar Light (Calendar app), Calendar Dark. The "Light/…" and "Dark/…" colour styles are legacy: do not use them. Never type a hex value. To bind: list the collection with `figma.teamLibrary.getVariablesInLibraryCollectionAsync(<collection key>)`, import with `figma.variables.importVariableByKeyAsync`, then `setBoundVariableForPaint` / `setBoundVariable`. Collection keys: Twake UI `ad3dfaa2d5b513e3082c5b9a6dc613ba428c0f9f`, Spacing `295cea0086dd3e179b12aafe1f5682c4e5a5624c`, Palettes `b4f8592f6af3f498df5326672a87953f96ce574c` (raw values, only when no semantic variable fits).
+- **Spacing and radius**: bind gaps and paddings to the **Spacing** collection (xs 8, s 16, m 24, l 32, xl 48, xxl 64, xxxl 96). Use auto layout everywhere.
+- **Text**: every text node uses a library text style (h1 to h6, subtitle1 to subtitle4, body1 to body3, caption, caption2, caption3, button large/medium/small, overline). No local font settings.
+- **Shadows**: effect styles "Light/shadow/N" ("Dark/shadow/N" in dark frames): 2 for raised cards, 3 for dialogs, 8 for menus, 16 for snackbars.
+- **Icons**: instances from the "♥ Icons Twake" page (`<name>_16_noborder`, e.g. `magnifier_16_noborder`, `trash_16_noborder`), found with `search_design_system`; inside library components, swap them with the "Change icon" property. File-type icons: `files-iconset`. App icons: page "💛 Icons twake 32px". App lockups: component set `Twakelogo` (property `logo`). Empty states: page "🌅 Illustrations Twake". Never import SVGs or use another icon set.
+- **Layout** (desktop): frame 1440×900 on `Background/default`; app bar 50px across the top; sidebar 236px on the left (a ready-made `🔷 sidebar <App>` exists per app); content area on `Background/paper` with radius 12 in Drive, Admin and AI. Mobile: 360×800, bottom navigation, full-bleed dialogs. Only one primary button per view.
+- **Wording**: English by default, French only when asked. Sentence case, verb-first buttons, realistic content (Camille Bernard, "Product committee prep", "2027 budget.xlsx"), never lorem ipsum. French: "vous", non-breaking space before ? ! : ;, 24-hour times, weeks start Monday.
+
+### When the library has no component for it
+
+Compose the element from library instances and variables (e.g. a chat bubble from a frame bound to `Background/default`, `body2` text and an avatar instance). Name the frame `⚠ Not in library: <name>` and list it in your final message, so the design team can decide whether to add it to the library. Never present it as a library component.
+
+### Library components
+
+Look up the component to use, and its key, in `https://raw.githubusercontent.com/linagora/twake-guidelines/main/skills/twake-figma-mockups/references/figma-components.md`. It maps every common need (button, text field, app bar, sidebar, dialog, mail list item, attachment chip…) to its Library Twake component set. Ready-made sidebars exist per app (`🔷 sidebar Mail`, `Drive`, `Calendar`, `Contact`, `Docs`, `AI`, `Space`). Pages marked ❌ in the library (Permission dialog, Pie chart, Timeline) are not validated: do not use them.
+
+### Final check (mandatory)
+
+Before handing over, run an audit with `use_figma` on the mockup frame and fix every finding, then run it again:
+
+```js
+const root = await figma.getNodeByIdAsync(FRAME_ID); const issues = [];
+function insideInstance(n){ for(let p=n.parent;p;p=p.parent) if(p.type==='INSTANCE') return true; return false; }
+root.findAll(n => {
+  if (insideInstance(n)) return false;
+  const bound = n.boundVariables || {};
+  if ('fills' in n && Array.isArray(n.fills) && n.fills.some(f => f.visible !== false && f.type === 'SOLID') && !(bound.fills && bound.fills.length) && !n.fillStyleId) issues.push('unbound fill: ' + n.name);
+  if ('strokes' in n && Array.isArray(n.strokes) && n.strokes.length && !(bound.strokes && bound.strokes.length)) issues.push('unbound stroke: ' + n.name);
+  if (n.type === 'TEXT' && !n.textStyleId) issues.push('text without style: ' + n.name);
+  if (['VECTOR','BOOLEAN_OPERATION','STAR','POLYGON'].includes(n.type)) issues.push('drawn shape (use a library icon/component): ' + n.name);
+  return false;
+});
+for (const inst of root.findAllWithCriteria({ types: ['INSTANCE'] })) {
+  if (insideInstance(inst)) continue;
+  const main = await inst.getMainComponentAsync();
+  if (main && !main.remote) issues.push('local component, not from the library: ' + inst.name);
+}
+return issues.length ? issues.join('\n') : 'clean';
+```
+
+Frames deliberately marked `⚠ Not in library` may keep local structure but still use variables and text styles.
+
+### Handing over
+
+End with: the link to the frame, the app/theme/language used, and the list of `⚠ Not in library` elements (or "everything comes from Library Twake"). Do not describe the screen at length; the designer will look at it.
+
+### Mockups made outside Figma
+
+Quick explorations made outside Figma (HTML prototypes, design artifacts) are not reference mockups: rebuild them here with real library instances before they are shared as the design.
 
 ---
 
@@ -2111,6 +2493,103 @@ Follow `twake-git-conventions`. Never bundle multiple projects.
 ---
 
 
+Prune every test that guards no behavior.
+
+**1. Find what each test depends on**
+
+Keep a test only if it depends on the intended behavior: it should change only when that behavior changes, and fail only when it regresses.
+
+If another test already guards the same behavior, prune the copy.
+
+Prune tests that depend on:
+
+**The past:** it asserts that removed code stays gone. Bringing it back would be a decision, not a regression.
+
+For example:
+
+- A feature was removed, and tests assert it's gone.
+- A module was moved, and a test asserts it's absent from its old path.
+
+**Nothing:** no change to the code can make it fail, so it has no reason of its own to change.
+
+For example:
+
+- It tests the browser: a `<button>` renders, or a click event fires. The browser is already tested.
+- It mocks the unit under test, then asserts what the mock returns.
+- It asserts what the type system already guarantees.
+
+**The implementation:** it changes whenever the code does, even when behavior didn't.
+
+For example:
+
+- The expected value is derived from the same logic as the code, so a wrong result still passes.
+- It asserts private state, internal call order, or which helper was invoked.
+
+**2. Prune**
+
+- Delete every test that isn't anchored to intended behavior.
+- Where one also covers behavior something relies on, rewrite it against that behavior instead.
+- Delete production code that only existed for the tests you removed.
+
+**What done looks like**
+
+- Every test left is anchored to intended behavior.
+- Each one would fail on a regression, and only on a regression.
+- No test asserts code that no longer exists.
+- No two tests guard the same behavior.
+- No production code exists only for tests.
+
+**Example**
+
+```diff
+--- a/pricing.test.ts
++++ b/pricing.test.ts
+@@ rewritten: the expected value repeated the code's logic @@
+ test("applies the discount", () => {
+-  const price = 100;
+-  expect(applyDiscount(price, 0.2)).toBe(price - price * 0.2);
++  expect(applyDiscount(100, 0.2)).toBe(80);
+ });
+--- a/cart.test.ts
++++ b/cart.test.ts
+@@ rewritten against what callers see: it asserted private state @@
+ test("adds an item to the cart", () => {
+   const cart = new Cart();
+   cart.add(book);
+-  expect(cart._items.length).toBe(1);
++  expect(cart.total()).toBe(book.price);
+ });
+@@ deleted: checkout.test.ts already guards the same total @@
+-test("total includes tax", () => {
+-  expect(cartTotal([book], { tax: 0.1 })).toBe(11);
+-});
+--- a/export.test.ts
++++ b/export.test.ts
+@@ deleted: it guards code that no longer exists @@
+-test("legacy exporter is gone", () => {
+-  expect(existsSync("src/export/legacy.ts")).toBe(false);
+-});
+--- a/session.test.ts
++++ b/session.test.ts
+@@ deleted, with the production code that only existed for it @@
+-test("clears the cache", () => {
+-  _resetCacheForTests();
+-  expect(_getCacheSize()).toBe(0);
+-});
+--- a/session.ts
++++ b/session.ts
+@@ @@
+-export function _resetCacheForTests() { cache.clear(); }
+-export function _getCacheSize() { return cache.size; }
+```
+
+---
+
+Source: [caldoai/skills `prune-tests`](https://github.com/caldoai/skills/blob/main/skills/prune-tests/SKILL.md), MIT licence.
+
+---
+
+
 ## Twake React application
 
 The rules every agent follows when it builds a Twake front-end in React. The stack and
@@ -2156,10 +2635,10 @@ work around them silently; if one blocks you, stop and say so.
 | Lint, format | ESLint 10 flat config from `eslint-config-cozy-app` + jsx-a11y, Prettier |
 | i18n | `twake-i18n` |
 | Auth | OIDC, `openid-client` 6, through the shared twake-libs package (§8) |
-| Product analytics | **PostHog** (`posthog-js`), behind an `Analytics` port (§12) |
+| Product analytics | Events sent to the server, which publishes them to **PostHog**; behind an `Analytics` port (§12) |
 | Shared code | `@linagora/twake-utils` and the other packages of [`linagora/twake-libs`](https://github.com/linagora/twake-libs) |
 | Unit and component tests | Jest 30, Testing Library |
-| End-to-end tests | Playwright + axe, in a separate `e2e/` package (§11) |
+| End-to-end tests | Playwright + axe, for every feature, in a separate `e2e/` package (§11) |
 
 Existing apps (Mail, Contacts, Calendar) are on React 18 and React Router 7. New apps
 start on the versions above; the existing ones migrate once twake-mui allows it.
@@ -2387,20 +2866,30 @@ test its own change end to end.
   `e2e/scripts/stop.sh` removes containers, networks and volumes.
 - The app is tested **as its production image** (`E2E_APP_IMAGE=…`), or as a local build
   for quick iterations (`E2E_APP_DIR=…`).
+- **Every feature has a Playwright test**, with no exception: a feature is not done
+  until a test of `e2e/` covers it. A change to a screen or a flow ships with its test
+  in the same commit.
+- The tests are deterministic: locators and exact assertions, no step resolved by a
+  model.
 - Playwright: no mock, no stub. Desktop, tablet and phone projects. A CSP violation in
   the browser console fails the test. Each screen calls `expectNoA11yViolations(page)`.
 - `data-testid` values are a contract with `e2e/`, listed in `e2e/pages/README.md`.
 - The CI runs the same `start.sh` / `npx playwright test` / `stop.sh` as a developer.
+- An agent framework such as Tester Army `e2e` ([tester.army/e2e](https://tester.army/e2e))
+  may run a QA session every night next to the suite. It replaces no Playwright test
+  and gates no merge.
 
 ```bash
 cd e2e && npm ci && npx playwright install chromium
 ./scripts/start.sh && npx playwright test; ./scripts/stop.sh
 ```
 
-### 12. Product analytics: PostHog, mandatory
+### 12. Product analytics: through the server, mandatory
 
-Every app reports its user actions to PostHog. **Every user action is tracked, with no
-exception: a feature is not done until each of its actions emits an event.**
+Every app reports its user actions. **Every user action is tracked, with no exception: a
+feature is not done until each of its actions emits an event.** The app never talks to
+PostHog: it sends its events to the server, and **the server publishes them to PostHog**.
+No PostHog key, script or host in the browser.
 
 - **What counts as an action**: anything the user triggers. A click or tap on a control,
   a form submission, a keyboard shortcut, a drag and drop, a context-menu choice, opening
@@ -2410,39 +2899,54 @@ exception: a feature is not done until each of its actions emits an event.**
 - **Outcome too**: an action that calls the back end also reports how it ended
   (`<event>_succeeded` / `<event>_failed`, with an error code, never the error message).
 - **One port, one adapter.** `application/` declares an `Analytics` port (`track(event)`,
-  `page(view)`, `identify(userId)`, `reset()`); `adapters/posthog/` implements it with
-  `posthog-js` and is the only place that imports it. An in-memory adapter serves tests
-  and the runs where analytics is off. ESLint bans `posthog-js` everywhere else.
+  `page(view)`, `reset()`); `adapters/analytics/` implements it by sending the events to
+  the server (below). An in-memory adapter serves tests and the runs where analytics is
+  off. No app depends on `posthog-js`; ESLint bans it.
+- **Where the events go.** To the back end of the app, or to the shared Twake analytics
+  endpoint when the app has none of its own. Its URL is read at runtime (`/.env.js`,
+  `window.ANALYTICS_URL`), like the SSO settings (§8); without it the in-memory adapter is
+  wired and nothing leaves the browser. The adapter uses the ky instance of that back end
+  (§4), with the OIDC token of the user (§8).
+- **Wire format.** `POST {ANALYTICS_URL}/events` with
+  `{ app, version, events: [{ name, properties, view?, at }] }`: the app name and version,
+  then each event of the catalogue with its properties, the route pattern for a page
+  view, and the time it happened. Events are batched, sent at most every few seconds and
+  when the page is hidden (`fetch` with `keepalive`).
+- **The server's part.** It authenticates the request, derives the distinct id from the
+  session (a pseudonym of the OIDC `sub`, never a name or an e-mail address), drops the
+  events of a user who did not consent, rejects any event or property outside the
+  published catalogue, and forwards the rest to the Twake PostHog instance, self-hosted in
+  the EU (never PostHog Cloud, never a host outside the EU). The app therefore never calls
+  `identify()`: the identity comes from the session, not from the browser.
 - **Typed catalogue.** Events are a discriminated union in
   `application/analytics/events.ts`: name in `snake_case`, `<object>_<action>` in the past
   tense (`message_sent`, `thread_opened`, `room_search_submitted`), with its typed
   properties. `track()` accepts that union only, so an event that is not in the catalogue
-  does not compile. Every event carries the app name and version.
+  does not compile.
+- **Documented, event by event.** The app publishes what it sends in
+  `docs/analytics.md`: for each event, its name, when it is emitted, each property with
+  its type and its allowed values, and the outcome events. The page also says what is
+  never sent and how consent works. It is the contract the server checks the events
+  against and the document a data protection review reads, so it changes in the same
+  commit as `events.ts`; a test fails when an event of the catalogue is missing from it.
 - **Where the call goes.** In the use case when the action goes through one, otherwise in
   the `ui/` handler, through the `useAnalytics()` hook from the composition root. Never in
   `ds/`: a design-system component exposes its callbacks and the caller tracks.
 - **Fire and forget.** Tracking never blocks, delays or breaks the action: no `await` on
   it, and a failure of the adapter is swallowed and logged.
-- **Identity.** `identify()` with the OIDC `sub` once the session is up, `reset()` on
-  logout. No name and no e-mail address as the distinct id.
 - **Never send content or personal data.** No message, subject, file name, room, contact
   or event title, search query, e-mail address, display name, token or URL carrying one.
-  Properties are ids, counts, enums and booleans. Because of that, PostHog **autocapture
-  is off** (it sends the text of the clicked element), automatic page-view capture is off
-  (the router reports views, with the route pattern and not the resolved URL), and session
-  recording is off.
-- **Consent first.** The app asks the user for consent to analytics, and nothing is sent
-  before they accept: PostHog starts opted out (`opt_out_capturing_by_default`) and is
-  opted in only on acceptance. Refusing is as easy as accepting, the app works the same
-  either way, and the choice can be changed at any time in the settings.
-- **Self-hosted in the EU.** Events go to the Twake PostHog instance, self-hosted in the
-  EU. Never PostHog Cloud, never a host outside the EU.
-- **Runtime configuration.** Project key and host are read at runtime (`/.env.js`,
-  `window.POSTHOG_KEY`, `window.POSTHOG_HOST`), like the SSO settings (§8). Without a key
-  the in-memory adapter is wired and nothing leaves the browser. The host is added to the
-  `connect-src` of the CSP (§10); no PostHog script is loaded from a CDN.
+  Properties are ids, counts, enums and booleans. There is no autocapture and no session
+  recording: only the events of the catalogue leave the browser, and page views carry the
+  route pattern, not the resolved URL.
+- **Consent first.** The app asks the user for consent to analytics, and sends nothing
+  before they accept. Refusing is as easy as accepting, the app works the same either
+  way, and the choice can be changed at any time in the settings. The choice is stored
+  with the user's settings, where the server reads it too.
+- **CSP.** Only the analytics endpoint is added to the `connect-src` of the CSP (§10),
+  usually the back end the app already calls.
 - **Tests.** Each feature spec asserts, on the in-memory adapter, the events its actions
-  emit. The e2e stack (§11) runs without a PostHog key.
+  emit. The e2e stack (§11) runs without `ANALYTICS_URL`.
 
 ### 13. Before committing
 
@@ -2450,7 +2954,7 @@ exception: a feature is not done until each of its actions emits an event.**
 npm run lint && npm run format:check && npm run typecheck && npm test && npm run build
 ```
 
-and, for anything that changes a screen or a flow, the e2e suite of §11.
+and, for anything that changes a screen or a flow, its Playwright test and the e2e suite of §11.
 
 ---
 
@@ -2490,10 +2994,10 @@ Twake / Cozy React projects use two in-house component libraries. **Never import
 
 | Library | Based on | Status | Role |
 |---|---|---|---|
-| [`twake-mui`](https://github.com/linagora/twake-ui) | MUI **v7** | Modern, early stage (limited catalogue) | **First choice** — use whenever the component you need exists here |
+| [`twake-mui`](https://github.com/linagora/twake-ui) | MUI **v9** | Modern, early stage (limited catalogue) | **First choice** — use whenever the component you need exists here |
 | [`cozy-ui`](https://github.com/cozy/cozy-ui) | MUI **v4** | Mature, outdated, very complete | **Fallback** when `twake-mui` does not yet provide the component or variant |
 
-This order reflects the soft migration toward MUI v7: reach for `twake-mui` first, and only drop back to `cozy-ui` when `twake-mui` is missing what you need.
+This order reflects the soft migration toward MUI v9: reach for `twake-mui` first, and only drop back to `cozy-ui` when `twake-mui` is missing what you need.
 
 #### When neither library has what you need
 

@@ -1,5 +1,64 @@
 # Changelog
 
+## [0.25.0](https://github.com/linagora/twake-guidelines/compare/v0.24.0...v0.25.0) (2026-11-24)
+
+
+### Features
+
+* **decisions:** Keep one log per app in a repo that groups several apps ([#85](https://github.com/linagora/twake-guidelines/issues/85)) ([96e2497](https://github.com/linagora/twake-guidelines/commit/96e2497c5999a803d0d9a5dc47832b302e240c20))
+
+## [0.24.0](https://github.com/linagora/twake-guidelines/compare/v0.23.0...v0.24.0) (2026-11-24)
+
+
+### Features
+
+* **decisions:** Find the entries of other packages that name yours ([b49189e](https://github.com/linagora/twake-guidelines/commit/b49189ea21fa4dc3e2a27a86324675ee880b0408))
+* **decisions:** Keep one log per package in a monorepo ([74ebf3c](https://github.com/linagora/twake-guidelines/commit/74ebf3cfd4dfc6a5b759c4d394bc9a40a3fe3d94))
+* **decisions:** Keep one root log for an app, one per package in a library monorepo ([9f93000](https://github.com/linagora/twake-guidelines/commit/9f93000e428b71b4a6c48d320f6de1b5da61a765))
+* **testing:** Add twake-prune-tests skill ([d68896a](https://github.com/linagora/twake-guidelines/commit/d68896a85de7c2c73ad5e8590ce7ee314f13b664))
+
+## [0.23.0](https://github.com/linagora/twake-guidelines/compare/v0.22.0...v0.23.0) (2026-11-20)
+
+
+### Features
+
+* **decisions:** Add a skill to record every decision in docs/decisions.md ([c3d8e0d](https://github.com/linagora/twake-guidelines/commit/c3d8e0d0dbc02aed6567a5acfc6675ffe09ca04d))
+
+
+### Bug Fixes
+
+* **react:** Say twake-mui is on MUI v9 ([7eff80a](https://github.com/linagora/twake-guidelines/commit/7eff80a18f2ca3307c9b153ebef0630fb5597619))
+
+## [0.22.0](https://github.com/linagora/twake-guidelines/compare/v0.21.0...v0.22.0) (2026-11-17)
+
+
+### Features
+
+* **react:** Send analytics through the server, and document every event ([ff67892](https://github.com/linagora/twake-guidelines/commit/ff67892e0568b334358e63499242ddfac346b4c5))
+
+## [0.21.0](https://github.com/linagora/twake-guidelines/compare/v0.20.0...v0.21.0) (2026-11-17)
+
+
+### Features
+
+* **bender-scripts:** Add skill for Bender scripts run by the user ([51f5964](https://github.com/linagora/twake-guidelines/commit/51f59646786e719fd817bb9f8b24001ff7766dbb))
+* **figma-mockups:** Add Twake Figma mockups skill ([27effbd](https://github.com/linagora/twake-guidelines/commit/27effbdd133ec00f77041679376ca436706d47f9))
+
+## [0.20.0](https://github.com/linagora/twake-guidelines/compare/v0.19.0...v0.20.0) (2026-11-10)
+
+
+### Features
+
+* **app-integrations:** add a skill for integrating twake apps ([#71](https://github.com/linagora/twake-guidelines/issues/71)) ([efbf8da](https://github.com/linagora/twake-guidelines/commit/efbf8da12e421bc60e970dcc978dceb8277fb964))
+
+## [0.19.0](https://github.com/linagora/twake-guidelines/compare/v0.18.1...v0.19.0) (2026-11-09)
+
+
+### Features
+
+* **react:** Require a deterministic Playwright test for every feature ([ef70674](https://github.com/linagora/twake-guidelines/commit/ef7067473f6113a234fd2328d643ca13132152b3))
+* **react:** require a Playwright test for every feature ([662981a](https://github.com/linagora/twake-guidelines/commit/662981a0254d7b6aff3fccbb03fb5b3cb2e70a77))
+
 ## [0.18.1](https://github.com/linagora/twake-guidelines/compare/v0.18.0...v0.18.1) (2026-10-06)
 
 
