@@ -189,6 +189,8 @@ Always enable `"strict": true` in `tsconfig.json`. Never disable individual stri
 
 Key flags `strict` enables: `strictNullChecks`, `noImplicitAny`, `strictFunctionTypes`, `strictBindCallApply`, `useUnknownInCatchVariables`.
 
+A package published as ESM also sets `"module": "nodenext"` and `"moduleResolution": "nodenext"`: see "Publishing an ESM package" in `twake-javascript-conventions`.
+
 ---
 
 ## Decorators
