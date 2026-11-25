@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release a Cozy/Twake App"
+  short_description: "Release Cozy/Twake web app beta and stable versions"
+  default_prompt: "Use $twake-app-release to prepare the next beta release of the selected Cozy/Twake web app."
