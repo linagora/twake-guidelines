@@ -1,6 +1,6 @@
 ---
 name: twake-react-app
-description: Use when creating, scaffolding, or implementing a Twake front-end application in React (a standalone SPA such as Twake Space, Mail, Chat, Contacts, Calendar, or a new app). Fixes the stack (React 19, twake-mui, TanStack Query or cozy-client depending on the backend, Rsbuild through rsbuild-config-twake-app, React Router, ESLint with a11y), the hexagonal layout, the local design system in @/ds/, twake-i18n with the 7 default languages, mandatory OIDC sign-in, RGAA / EN 301 549 accessibility, mandatory tracking of every user action through the server (which publishes to PostHog), a Playwright end-to-end test for every feature, and the dockerised stack each app boots to test itself.
+description: Use when creating, scaffolding, or implementing a Twake front-end application in React (a standalone SPA such as Twake Space, Mail, Chat, Contacts, Calendar, or a new app). Fixes the stack (React 19, twake-mui, TanStack Query or cozy-client depending on the backend, Rsbuild through rsbuild-config-twake-app, React Router, Rslint with a11y), the hexagonal layout, the local design system in @/ds/, twake-i18n with the 7 default languages, mandatory OIDC sign-in, RGAA / EN 301 549 accessibility, mandatory tracking of every user action through the server (which publishes to PostHog), a Playwright end-to-end test for every feature, and the dockerised stack each app boots to test itself.
 ---
 
 # Twake React application
@@ -29,7 +29,6 @@ work around them silently; if one blocks you, stop and say so.
 |---|---|---|
 | `@linagora/twake-mui` 9.17 declares `react: ^18` | `npm install` fails with React 19 (ERESOLVE) | React 19 support is in progress in twake-ui (and the other Twake libraries). React 19 stays the target: wait for the release. Never `--legacy-peer-deps`, never `overrides`. |
 | `rsbuild-config-twake-app` is not published yet in `linagora/twake-libs` | No shared Rsbuild config for Twake apps | Plain `@rsbuild/core` meanwhile (§3), then switch. |
-| `eslint-config-cozy-app` 7.1 has no accessibility rules | jsx-a11y is not checked | Add `eslint-plugin-jsx-a11y-x` in the app (§3); an `a11y` export upstream in cozy-libs is the target. |
 | twake-mui ships its own strings in 4 languages only (en, fr, ru, vi) | twake-mui labels fall back to English in de, es, it | Record it in `docs/twake-mui-gaps.md`; the fix belongs in twake-ui. |
 | No shared OIDC package yet in `twake-libs` | Each app copies `oidcAuth.ts` | See §8: the package is to be extracted, not rewritten per app. |
 
@@ -45,7 +44,7 @@ work around them silently; if one blocks you, stop and say so.
 | HTTP client | **ky**, in the adapters only (§4), with the auth hooks of the shared OIDC package (§8) |
 | Routing | **React Router 8** (needs React ≥ 19.2) |
 | Build | **Rsbuild** via `rsbuild-config-twake-app` (§3) |
-| Lint, format | ESLint 10 flat config from `eslint-config-cozy-app` + jsx-a11y, Prettier |
+| Lint, format | **Rslint** and `rs fmt` (rstack), from the root `rstack.config.mjs` (§3) |
 | i18n | `twake-i18n` |
 | Auth | OIDC, `openid-client` 6, through the shared twake-libs package (§8) |
 | Product analytics | Events sent to the server, which publishes them to **PostHog**; behind an `Analytics` port (§12) |
@@ -86,18 +85,36 @@ assumptions and without cozy-ui). Never use `rsbuild-config-cozy-app`: it copies
 `@rsbuild/plugin-react` and a short `rsbuild.config.ts`, as Mail does, and switch once it
 is out.
 
-**ESLint.** `eslint.config.js` spreads `eslint-config-cozy-app` (react config) and adds:
+**Rslint and `rs fmt`, from `rstack.config.mjs`.** `npm run lint` runs `rs lint`,
+`npm run format` runs `rs fmt` and `npm run format:check` runs `rs fmt --check`
+([`rstack`](https://github.com/rstackjs/rstack-cli)), all from the `rstack.config.mjs` at
+the root of the repository. No ESLint and no Prettier: neither is a dependency, and there
+is no `eslint.config.js` or `.prettierrc`. Start from the `rstack.config.mjs` of
+[twake-space](https://github.com/linagora/twake-space/blob/main/rstack.config.mjs).
 
-- `eslint-plugin-jsx-a11y-x` with its strict rules **as errors** (the original
-  `eslint-plugin-jsx-a11y` does not support ESLint 10);
-- `@tanstack/eslint-plugin-query` recommended rules;
+`define.lint` holds:
+
+- Rslint's `js` recommended and `ts` strict type-checked presets;
+- Rslint's `jsx-a11y` plugin, with the rules of the strict preset **as errors**;
+- `@tanstack/eslint-plugin-query` recommended rules and the React Compiler rules of
+  `eslint-plugin-react-hooks`, which Rslint does not port. They run as JS plugins, the
+  React Compiler ones under a `react-compiler/` prefix (Rslint keeps `react-hooks/` for
+  its own rules);
 - the import boundaries of §4 and §5 (`no-restricted-imports`, per folder);
 - a ban on `@mui/*` outside `src/ds/`, and on `cozy-ui` everywhere.
+
+Rslint's `no-restricted-syntax` does not match TypeScript nodes
+([web-infra-dev/rslint#2626](https://github.com/web-infra-dev/rslint/issues/2626)): the
+selectors that name one (`as unknown as T`) run in a small local JS rule, as twake-space
+does. Do not drop them.
+
+`define.fmt` holds the formatting options: no semicolons, single quotes, no trailing
+commas, 80 columns, `arrowParens: 'avoid'`.
 
 ## 4. Hexagonal architecture
 
 Dependencies point inwards: `ui` → `application` → `domain`; `adapters` → `application`
-(they implement its ports) and `domain`. ESLint enforces it.
+(they implement its ports) and `domain`. Rslint enforces it.
 
 - **`domain/`** imports nothing but `domain/`. No `fetch`, no React, no library client.
 - **`application/`** holds one use case per file (`fetchSpace`, `saveEvent`…) and the
@@ -159,7 +176,7 @@ When twake-mui lacks a component or a variant, build it in `src/ds/`:
 - **Component behaviour only, no business data.** No domain types, no use case, no
   TanStack Query, no React Router, no `twake-i18n`, no import from `domain/`,
   `application/`, `adapters/`, `ui/` or `app/`. Labels, values and links arrive as
-  props; a link takes a `component` prop the way MUI does. ESLint enforces it.
+  props; a link takes a `component` prop the way MUI does. Rslint enforces it.
 - Raw MUI, `sx` and `styled` are allowed **here and only here**, using theme values
   (`theme.palette`, `theme.spacing`) rather than hard-coded ones. Inline `style` stays
   forbidden.
@@ -314,7 +331,7 @@ No PostHog key, script or host in the browser.
 - **One port, one adapter.** `application/` declares an `Analytics` port (`track(event)`,
   `page(view)`, `reset()`); `adapters/analytics/` implements it by sending the events to
   the server (below). An in-memory adapter serves tests and the runs where analytics is
-  off. No app depends on `posthog-js`; ESLint bans it.
+  off. No app depends on `posthog-js`; Rslint bans it.
 - **Where the events go.** To the back end of the app, or to the shared Twake analytics
   endpoint when the app has none of its own. Its URL is read at runtime (`/.env.js`,
   `window.ANALYTICS_URL`), like the SSO settings (§8); without it the in-memory adapter is
