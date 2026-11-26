@@ -107,6 +107,7 @@ ln -s .twake-guidelines/AGENTS.md AGENTS.md
 | `twake-bender-scripts` | Bender instance administration | Agent never calls the Bender API nor sees a token: writes curl scripts (app updates, source changes, context and instance flags) the user runs and pastes back |
 | `twake-figma-mockups` | Figma mockups | Library Twake instances only, colours and spacing bound to its variables, its text styles and icons, an audit before handing over |
 | `twake-decisions` | All projects | Every decision recorded in `docs/decisions.md`, append-only, in the commit that applies it, with a category, who decided and the source; searched before asking or proposing |
+| `twake-ux` | UI of every Twake app | Design team rules: destructive actions in the theme's red, last in menus, Undo snackbar or confirmation dialog; contrast theme as a platform setting; open questions for the designer |
 
 ### Planned
 
@@ -185,6 +186,7 @@ twake-guidelines/
 │   └── twake-bender-scripts/SKILL.md
 │   └── twake-figma-mockups/SKILL.md
 │   └── twake-decisions/SKILL.md
+│   └── twake-ux/SKILL.md
 ├── AGENTS.md                   # Generated aggregate for OpenCode / other AGENTS.md consumers
 ├── scripts/
 │   └── gen-agents.sh           # Regenerates AGENTS.md from skills/
