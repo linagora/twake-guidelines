@@ -1036,17 +1036,23 @@ but calls an external origin will break in production.
 
 ## Decisions log (Twake / Cozy)
 
-Every project keeps its decisions in a log, `docs/decisions.md`, versioned with the code. A decision missing from the log does not exist: the next agent or developer will not know it and will ask again, or undo it.
+Every project keeps its decisions in a log, a `docs/decisions.md` versioned with the code (one or several, see below). A decision missing from the log does not exist: the next agent or developer will not know it and will ask again, or undo it.
 
-### One app or several packages
+### Where the log lives
 
-A repository that ships one app keeps one log at its root, `docs/decisions.md`, even when the app is split into workspaces or into variants of the same app (`apps/private`, `apps/public`, `common`): those parts ship together as one product.
+Take the first case that matches the repository:
 
-A multi-package repository keeps one log per package and none at its root. It is either a library monorepo, whose packages are published on their own (for example twake-ui, twake-libs, cozy-libs), or a repository that groups several distinct apps and packages (for example twake-phone: `apps/gateway`, `apps/web`, `apps/workplace` and `packages/*`). Each package, and each app under `apps/`, keeps its own log, `<package>/docs/decisions.md` (for example `packages/twake-mui/docs/decisions.md` or `apps/gateway/docs/decisions.md`).
+- An app with a frontend and a backend (`apps/frontend`, `apps/backend`): one log per side, `apps/frontend/docs/decisions.md` and `apps/backend/docs/decisions.md`.
+- A single service, or an app whose backend is not in the repository, even split into workspaces or variants of the same app (`apps/private`, `apps/public`, `common`): one log at the root, `docs/decisions.md`.
+- A library monorepo, whose packages are published on their own (twake-ui, twake-libs, cozy-libs): one log per package, for example `packages/twake-mui/docs/decisions.md`.
+- A repository of several distinct apps, not variants of one app, and packages (twake-phone: `apps/gateway`, `apps/web`, `apps/workplace`, `packages/*`): one log per app and per package, for example `apps/gateway/docs/decisions.md`.
+- twake-tools: not decided, ask Crash-- (CTO) before creating a log.
 
-- Search the log of the package you change, and the logs of the other packages your change reaches. In the other logs, also find the entries whose Scope line names your package (for example `grep -n "twake-mui" packages/*/docs/decisions.md`): a decision that touches several packages is written only once.
-- Write a decision in the log of the package it touches. When it touches several, write it once, in the log of the main one, and name the others in its Scope line.
-- Never create a `docs/decisions.md` at the root of a multi-package repository. A package with no log gets its own (see below).
+The front and back app, the library monorepo and the repository of several apps are multi-log repositories, and each side, package or app that keeps a log is a part. In a multi-log repository:
+
+- Search the log of the part you change, and the logs of the other parts your change reaches. In the other logs, also find the entries whose Scope line names your part (for example `grep -n "twake-mui" packages/*/docs/decisions.md`): a decision that touches several parts is written only once.
+- Write a decision in the log of the part it touches. When it touches several, write it once, in the log of the main one, and name the others in its Scope line.
+- Keep the root free of `docs/decisions.md`. A part with no log gets its own (see below).
 
 ### Before asking or proposing
 
@@ -1066,7 +1072,7 @@ Choices that stay inside the code of the change are not decisions, for example:
 
 Write the entry in the log in the same commit (or at least the same PR) as the change it explains. A decision taken with no code change (a question answered, a change refused) gets its own commit.
 
-Create the log if the project (in a multi-package repository, the package) has none, with a `# Decisions` title and one line saying it is append-only.
+Create the log if the project (in a multi-log repository, the part) has none, with a `# Decisions` title and one line saying it is append-only.
 
 ### Entry format
 
@@ -1083,7 +1089,7 @@ Create the log if the project (in a multi-package repository, the package) has n
 - Decision: one sentence, present tense, the rule as it now stands.
 - Decided by: who settled it, and a link to the source (PR, issue, review comment, message). When the source has no public link (a call, a private chat), name the person, the channel and the date. When you settled it alone, write `agent (session <id or PR link>), to be confirmed by <who>`, naming the person who must confirm it (the maintainer, or the designer for UX and UI).
 - Why: one line.
-- Scope: desktop, mobile or both, and the screens or modules it covers. In a multi-package repository, also the other packages it touches.
+- Scope: desktop, mobile or both, and the screens or modules it covers. In a multi-log repository, also the other parts it touches.
 
 A question still waiting for an answer is an entry too: title `## YYYY-MM-DD, [Category] Pending: short title`, the options instead of the decision, and who must decide. When it is settled, write a new entry whose Decision line starts with `Replaces the pending question of YYYY-MM-DD, "<title>".`
 
@@ -1104,16 +1110,22 @@ Add entries at the end of the log and leave past entries as they are, wrong ones
 
 ### AGENTS.md line
 
-Every project that follows this skill, a repository that ships one app included, has this line in its `AGENTS.md`:
+A project with one log at its root has this line in its `AGENTS.md`:
 
 ```markdown
 - Decisions: `docs/decisions.md`, mandatory. Search it before asking a question or proposing a change; record every decision there, in the commit that applies it (skill `twake-decisions`).
 ```
 
-A multi-package repository names where its packages live (`packages/*`, `config/*`, `apps/*`) and has this line instead:
+A multi-log repository names where its logs live (`apps/frontend/docs/decisions.md` and `apps/backend/docs/decisions.md`, or `packages/*/docs/decisions.md`, `apps/*/docs/decisions.md`) and has this line instead:
 
 ```markdown
-- Decisions: each package keeps its own `docs/decisions.md` (`packages/*/docs/decisions.md`), mandatory, none at the repo root. Search the log of the package you change before asking a question or proposing a change; record every decision in the log of the package it touches (the main one when it touches several, the others in its Scope line), in the commit that applies it (skill `twake-decisions`).
+- Decisions: each package or app keeps its own `docs/decisions.md` (`packages/*/docs/decisions.md`, `apps/*/docs/decisions.md`), mandatory, none at the repo root. Search the log of the package or app you change before asking a question or proposing a change; record every decision in the log of the package or app it touches (the main one when it touches several, the others in its Scope line), in the commit that applies it (skill `twake-decisions`).
+```
+
+An app with a frontend and a backend writes it per side:
+
+```markdown
+- Decisions: the frontend keeps its decisions in `apps/frontend/docs/decisions.md` and the backend in `apps/backend/docs/decisions.md`, mandatory, none at the repo root. Search the log of the side you change before asking a question or proposing a change; record every decision in the log of the side it touches (the main one when it touches both, the other in its Scope line), in the commit that applies it (skill `twake-decisions`).
 ```
 
 ---
