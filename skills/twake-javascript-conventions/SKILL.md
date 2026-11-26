@@ -1,6 +1,6 @@
 ---
 name: twake-javascript-conventions
-description: Use when writing or reviewing JavaScript/TypeScript in Twake/Cozy projects. Enforces async/await over Promise chains, null over undefined, error handling contract (null / typed result / throw), function declaration style, strict equality, named exports only (never export default), date handling via Intl/date-fns (never moment.js), AppLinker for redirections (never window.location), and business-logic-only comments.
+description: Use when writing or reviewing JavaScript/TypeScript in Twake/Cozy projects. Enforces async/await over Promise chains, null over undefined, error handling contract (null / typed result / throw), function declaration style, strict equality, named exports only (never export default), date handling via Intl/date-fns (never moment.js), AppLinker for redirections (never window.location), business-logic-only comments, and ESM package publishing (relative imports with .js, JSON import attributes, a Node import check in CI).
 ---
 
 # JavaScript Conventions (Twake / Cozy)
@@ -55,6 +55,36 @@ import whateverName from './user';
 ```
 
 Re-exports follow the same rule: `export { fetchUser } from './user'`, never `export { default } from './user'`.
+
+## Publishing an ESM package
+
+A package published with `"type": "module"` must load in plain Node, with no bundler and no inline on the app side. Node resolves an ESM import by its exact path. A bundler fills in the missing part and hides the defect, then a test run or SSR that loads the package from `node_modules` fails with `ERR_MODULE_NOT_FOUND`.
+
+In the package source:
+
+- Write a relative import with its `.js` extension, also from a `.ts` file: `import { fetchUser } from './user.js'`. Import a directory through its index: `'./drive/index.js'`.
+- Import JSON with the attribute: `import fr from './locales/fr.json' with { type: 'json' }`.
+- Reference an image through the module URL: `new URL('./logo.png', import.meta.url)`. Bundlers emit it as an asset, Node gets a URL. `tsc` does not copy the image, so the package build copies it into `dist`: the Node check below does not read the file and passes without it.
+  Exception: while an app tests the package with Jest in CommonJS (ts-jest does not convert `import.meta`), export a small image as a data URI module instead: `export const logo = 'data:image/png;base64,…'`.
+- Ship CSS as its own entry in `exports`, never as `import './x.css'` from the package JavaScript: Node fails with `ERR_UNKNOWN_FILE_EXTENSION`.
+
+Check it:
+
+- TypeScript: set `"module": "nodenext"` and `"moduleResolution": "nodenext"` in the package `tsconfig.json` (`cozy-tsconfig` uses `bundler`). `tsc` then fails on a missing extension (TS2835), a directory import (TS2834) and a JSON import without the attribute (TS1543). JSON imports also need `"resolveJsonModule": true` (`cozy-tsconfig` sets it), or `tsc` stops at TS2732.
+- JavaScript that `tsc` does not compile: turn on `node/file-extension-in-import` in `rstack.config.mjs`. `rs lint --fix` adds the extensions.
+
+  ```js
+  define.lint(lint => [
+    ...react(lint),
+    { plugins: ['node'], rules: { 'node/file-extension-in-import': ['error', 'always'] } }
+  ])
+  ```
+
+- CI, after the build, in the package directory with its peers installed: import every JavaScript entry of `exports` in Node. It is the only check that also catches images and anything the tools above miss.
+
+  ```bash
+  node --input-type=module -e "await import('@linagora/twake-utils')"
+  ```
 
 ## Error handling
 
