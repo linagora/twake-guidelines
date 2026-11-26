@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.26.0](https://github.com/linagora/twake-guidelines/compare/v0.25.0...v0.26.0) (2026-11-26)
+
+
+### Features
+
+* **decisions:** Keep one log per side in an app with a frontend and a backend ([#89](https://github.com/linagora/twake-guidelines/issues/89)) ([13a183b](https://github.com/linagora/twake-guidelines/commit/13a183b47411e0bb09788d42a3530de7b54dc8be))
+
 ## [0.25.0](https://github.com/linagora/twake-guidelines/compare/v0.24.0...v0.25.0) (2026-11-24)
 
 
