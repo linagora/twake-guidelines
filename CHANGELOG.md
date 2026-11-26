@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.27.0](https://github.com/linagora/twake-guidelines/compare/v0.26.0...v0.27.0) (2026-11-26)
+
+
+### Features
+
+* **javascript:** Publish ESM packages that load in plain Node ([#87](https://github.com/linagora/twake-guidelines/issues/87)) ([f46eb46](https://github.com/linagora/twake-guidelines/commit/f46eb46e68de9615e514f61a6dbd45ca0b6f93ff))
+* **react:** Lint with Rslint and format with rs fmt ([#88](https://github.com/linagora/twake-guidelines/issues/88)) ([1c89d3c](https://github.com/linagora/twake-guidelines/commit/1c89d3cf7dfdf19a3d5818684aed00324d1e3e96))
+
 ## [0.26.0](https://github.com/linagora/twake-guidelines/compare/v0.25.0...v0.26.0) (2026-11-26)
 
 
